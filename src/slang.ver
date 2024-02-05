@@ -70,7 +70,6 @@ SLANG2 {
 		SLang_Last_Key_Char;
 		SLang_Load_File_Hook;
 		SLang_Num_Function_Args;
-		SLang_Rline_Quit;
 		SLang_TT_Baud_Rate;
 		SLang_TT_Read_FD;
 		SLang_TT_Write_FD;
