@@ -191,7 +191,7 @@ define timestamp_parse (timestamp)
    day--;			       %  offset from 0
    % Compute the cumulative number of days, accounting for a leap year
    day += Cumulative_Days_Per_Month[month];
-   if ((month > 2)
+   if ((month >= 2)		       %  month runs from 0 to 11 here
        && (0 == (year mod 4))
        && ((year mod 100) || (0 == (year mod 400))))
      day++;
