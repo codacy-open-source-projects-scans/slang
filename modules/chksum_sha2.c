@@ -482,8 +482,10 @@ static int update_num_bits_long (SLChksum_Type *chksum, unsigned int dnum_bits) 
 {
 #if _pSLANG_UINT64_TYPE
    _pSLuint64_Type lo, hi, c;
-   hi = ((_pSLuint64_Type*)(chksum->num_bits))[0];
-   lo = ((_pSLuint64_Type*)(chksum->num_bits))[1];
+   /* hi = ((_pSLuint64_Type*)(chksum->num_bits))[0]; */
+   /* lo = ((_pSLuint64_Type*)(chksum->num_bits))[1]; */
+   memcpy (&hi, chksum->num_bits, 8);
+   memcpy (&lo, chksum->num_bits+2, 8);
 
    lo = overflow_add_long(lo, (_pSLuint64_Type)dnum_bits << 3, &c);
    if (c)
@@ -496,8 +498,10 @@ static int update_num_bits_long (SLChksum_Type *chksum, unsigned int dnum_bits) 
    if (c)
      return -1;
 
-   ((_pSLuint64_Type*)(chksum->num_bits))[0] = hi;
-   ((_pSLuint64_Type*)(chksum->num_bits))[1] = lo;
+   /* ((_pSLuint64_Type*)(chksum->num_bits))[0] = hi; */
+   /* ((_pSLuint64_Type*)(chksum->num_bits))[1] = lo; */
+   memcpy (chksum->num_bits, &hi, 8);
+   memcpy (chksum->num_bits+2, &lo, 8);
 #else /* !_pSLANG_UINT64_TYPE */
    _pSLuint32_Type l1, l2, l3, l4, c;
 
