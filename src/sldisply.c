@@ -534,6 +534,8 @@ static unsigned int tt_sprintf(char *buf, unsigned int buflen, SLCONST char *fmt
    parms [1] = x;	       /* p1 */
    parms [2] = y;	       /* p2 */
 
+   memset (variables, 0, sizeof(variables));
+
    offset = 0;
    zero_pad = 0;
    field_width = 0;

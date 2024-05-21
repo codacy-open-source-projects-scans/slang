@@ -5,6 +5,9 @@
  * License or the Perl Artistic License.
  */
 
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #include <slang.h>
 
@@ -102,6 +105,35 @@ static int fcntl_setfl (int *flags)
    return do_fcntl_3_int (fd, F_SETFL, *flags);
 }
 
+static int fcntl_setpipe_sz (int *val)
+{
+   int fd;
+
+   if (-1 == pop_fd (&fd))
+     return -1;
+
+#ifdef F_SETPIPE_SZ
+   return do_fcntl_3_int (fd, F_SETPIPE_SZ, *val);
+#else
+   (void) val;
+   return check_and_set_errno (EINVAL);
+#endif
+}
+
+static int fcntl_getpipe_sz (void)
+{
+   int fd;
+
+   if (-1 == pop_fd (&fd))
+     return -1;
+
+#ifdef F_SETPIPE_SZ
+   return do_fcntl_2 (fd, F_GETPIPE_SZ);
+#else
+   return check_and_set_errno (EINVAL);
+#endif
+}
+
 #define F SLANG_FILE_FD_TYPE
 #define I SLANG_INT_TYPE
 static SLang_Intrin_Fun_Type Fcntl_Intrinsics [] =
@@ -110,6 +142,8 @@ static SLang_Intrin_Fun_Type Fcntl_Intrinsics [] =
    MAKE_INTRINSIC_1("fcntl_setfd", fcntl_setfd, I, I),
    MAKE_INTRINSIC_0("fcntl_getfl", fcntl_getfl, I),
    MAKE_INTRINSIC_1("fcntl_setfl", fcntl_setfl, I, I),
+   MAKE_INTRINSIC_0("fcntl_getpipe_sz", fcntl_getpipe_sz, I),
+   MAKE_INTRINSIC_1("fcntl_setpipe_sz", fcntl_setpipe_sz, I, I),
 
    SLANG_END_INTRIN_FUN_TABLE
 };
