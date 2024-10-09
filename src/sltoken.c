@@ -844,6 +844,26 @@ static int expand_escaped_string (register char *s,
 	     is_binary = -1;
 	     break;
 	  }
+
+	/* Handle Unicode surrogate pair -- algorithm based on unicode FAQ at www.unicode.org */
+	if (isunicode
+	    && (wch >= 0xD800) && (wch <= 0xDBFF)
+	    && (t < tmax)
+	    && (t[0] == '\\'))
+	  {
+	     SLwchar_Type wch2;
+	     int isunicode2;
+	     char *t1;
+
+	     t1 = _pSLexpand_escaped_char (t+1, tmax, &wch2, &isunicode2);
+	     if ((t1 != NULL) && isunicode2 && (wch2 >= 0xDC00) && (wch2 <= 0xDFFF))
+	       {
+		  SLwchar_Type x = ((wch & 0x3F) << 10) | (wch2 & 0x3FF);
+		  wch = ((((wch >> 6) & 0x1F) + 1) << 16) | x;
+		  t = t1;
+	       }
+	  }
+
 	if (isunicode == 0)
 	  {
 	     if (wch == 0)

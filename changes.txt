@@ -31,6 +31,8 @@ Changes since 2.3.3
     not set by %P. (Miroslav Lichvar)
 14. modules/fcntl-module.c: Added fcntl_getpipe_sz and
     fcntl_setpipe_sz functions to get and set the buffer size for pipes
+15. src/sltoken.c, modules/json-module.c: Added UTF-16 surrogate handling to the
+    expand_escaped_string function and json module
 
 {{{ Previous Versions
 

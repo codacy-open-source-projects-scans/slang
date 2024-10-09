@@ -183,6 +183,24 @@ private define test_bad_cases ()
 }
 test_bad_cases ();
 
+% Surrogates
+#ifeval (_slang_utf8_ok)
+private define test_surrogates (testno, s, wch)
+{
+   variable wch1 = string_to_wchars (s);
+   ifnot (_eqs (wch, wch1))
+     {
+	s = "[" + strjoin (array_map (String_Type, &sprintf, "%d", wch1), ", ") + "]";
+	failed ("test_surrogates test %d failed: expected %S got %S",
+		testno, wch, s);
+     }
+}
+test_surrogates (1, "\ud835\u{dce8}\ud835\udcf8\ud835\udcfe", [0x1D4E8, 0x1D4F8, 0x1D4FE]);
+test_surrogates (2, "\ud835\u{dce8}\ud835\udcf8\ud835", [0x1D4E8, 0x1D4F8, -237, -160, -181]);   %  unpaired
+test_surrogates (3, "\u{dce8}\ud835", [-237, -179, -168, -237, -160, -181]);   %  swapped
+test_surrogates (4, "\ud7ff\udcfe", [0xd7FF, -237, -179, -190]);
+
+#endif
 print ("Ok\n");
 exit (0);
 

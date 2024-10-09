@@ -132,23 +132,64 @@ static int parse_hex_digit (char ch) /*{{{*/
 }
 /*}}}*/
 
-static char *parse_4_hex_digits (char *s, unsigned int *new_string_len, char *new_string, int *is_binary_stringp) /*{{{*/
+static int decode_4_hex_digits (char *s, SLwchar_Type *wp)
 {
    int d1, d2, d3, d4;
-   SLwchar_Type wchar;
-#define BUFLEN 6
-   SLuchar_Type buf[BUFLEN], *u;
 
-   if (   (-1 == (d1 = parse_hex_digit (s[0])))
+   if ((-1 == (d1 = parse_hex_digit (s[0])))
        || (-1 == (d2 = parse_hex_digit (s[1])))
        || (-1 == (d3 = parse_hex_digit (s[2])))
        || (-1 == (d4 = parse_hex_digit (s[3]))))
      {
 	SLang_verror (Json_Parse_Error, "Illegal Unicode escape sequence in JSON string: \\u%c%c%c%c", s[0], s[1], s[2], s[3]);	 /* may contain '\000' */
-	return NULL;
+	return -1;
      }
 
-   wchar = (d1 << 12) + (d2 << 8) + (d3 << 4) + d4;
+   *wp = (d1 << 12) + (d2 << 8) + (d3 << 4) + d4;
+   return 0;
+}
+
+/* s is expected to point to XXXX where X is a hex-digit.  If XXXX is a
+ * UTF16 surrogate, then \uYYYY must follow
+ */
+static char *parse_hex_encoded_string (char *s, SLwchar_Type *wp)
+{
+   SLwchar_Type w;
+
+   if (-1 == decode_4_hex_digits (s, &w))
+     return NULL;
+   s += 4;
+
+   /* Check for a surrogate */
+   if ((w >= 0xD800) && (w <= 0xDBFF)
+       && (s[0] == ESCAPE_CHARACTER)
+       && (s[1] == 'u'))
+     {
+	SLwchar_Type w1;
+
+	if (-1 == decode_4_hex_digits (s+2, &w1))
+	  return NULL;
+	if ((w1 >= 0xDC00) && (w1 <= 0xDFFF))
+	  {
+	     SLwchar_Type x = ((w & 0x3F) << 10) | (w1 & 0x3FF);
+	     w = ((((w >> 6) & 0x1F) + 1) << 16) | x;
+	     s += 6;
+	  }
+     }
+   *wp = w;
+   return s;
+}
+
+
+static char *parse_hex_digits (char *s, unsigned int *new_string_len, char *new_string, int *is_binary_stringp) /*{{{*/
+{
+   SLwchar_Type wchar;
+#define BUFLEN 6
+   SLuchar_Type buf[BUFLEN], *u;
+
+   if (NULL == (s = parse_hex_encoded_string (s, &wchar)))
+     return NULL;
+
    if (is_binary_stringp != NULL)
      *is_binary_stringp = (wchar == 0);
 
@@ -156,7 +197,7 @@ static char *parse_4_hex_digits (char *s, unsigned int *new_string_len, char *ne
    *new_string_len += SLutf8_encode (wchar, u, BUFLEN) - u;
 #undef BUFLEN
 
-   return s+4;
+   return s;
 }
 /*}}}*/
 
@@ -204,7 +245,7 @@ static int parse_string_length_and_move_ptr (Parse_Type *p, unsigned int *lenp, 
 		case 'u':
 		    {
 		       int isbin;
-		       if (NULL == (s = parse_4_hex_digits (s, &new_string_len, NULL, &isbin)))
+		       if (NULL == (s = parse_hex_digits (s, &new_string_len, NULL, &isbin)))
 			 return -1;
 		       *is_binary_stringp |= isbin;
 		       break;
@@ -278,7 +319,7 @@ static char *parse_string (Parse_Type *p,
 	   case 't':
 	     new_string[new_string_pos++] = '\t'; break;
 	   case 'u':
-	     if (NULL != (s = parse_4_hex_digits (s, &new_string_pos, new_string + new_string_pos, NULL)))
+	     if (NULL != (s = parse_hex_digits (s, &new_string_pos, new_string + new_string_pos, NULL)))
 	       break;  /* else drop */
 	   default:
 	     goto return_application_error;
@@ -958,6 +999,7 @@ static char *alloc_encoded_json_string (char *ptr, char *end_of_input_string, SL
 
    while (ptr < end_of_input_string)
      {
+	SLstrlen_Type dlen;
 	unsigned char ch = (unsigned char) *ptr;
 	if (ch < 0x80)
 	  {
@@ -966,8 +1008,10 @@ static char *alloc_encoded_json_string (char *ptr, char *end_of_input_string, SL
 	     continue;
 	  }
 
-	len += 6;		       /* FIXME: Does not handle 0x1UUUU */
-	ptr += compute_multibyte_char_len (ptr, end_of_input_string);
+	len += 6;
+	dlen = compute_multibyte_char_len (ptr, end_of_input_string);
+	if (dlen > 3) len += 6;	       /* allow surrogate representation  */
+	ptr += dlen;
 
 	if (ptr > end_of_input_string)
 	  {
@@ -980,6 +1024,15 @@ static char *alloc_encoded_json_string (char *ptr, char *end_of_input_string, SL
    return SLmalloc (len + 1);
 }
 /*}}}*/
+
+static void create_surrogate_pair (SLwchar_Type w, SLwchar_Type *hip, SLwchar_Type *lop)
+{
+   /* Adaped from <https://www.unicode.org/faq//utf_bom.html> */
+   SLwchar_Type x = w & 0xFFFF;
+   SLwchar_Type u = (w >> 16) & 0x1F;
+   *hip = 0xD800 | ((u-1) << 6) | (x>>10);
+   *lop = 0xDC00 | (x & 0x3FF);
+}
 
 static char *fill_encoded_json_string (char *ptr, char *end_of_input_string,
 				       char *dest_ptr) /*{{{*/
@@ -1023,15 +1076,14 @@ static char *fill_encoded_json_string (char *ptr, char *end_of_input_string,
 
 	     if (w > 0xFFFF)
 	       {
-		  /* FIXME: Must be encoded as a pair of UTF-16 surrogates */
-		  memcpy (dest_ptr, ptr, len);
-		  dest_ptr += len;
-	       }
-	     else
-	       {
-		  sprintf (dest_ptr, "\\u%04X", w);
+		  SLwchar_Type w0;
+		  create_surrogate_pair (w, &w0, &w);
+		  sprintf (dest_ptr, "\\u%04X", w0);
 		  dest_ptr += 6;
+		  /* drop */
 	       }
+	     sprintf (dest_ptr, "\\u%04X", w);
+	     dest_ptr += 6;
 	  }
 	ptr += len;
      }

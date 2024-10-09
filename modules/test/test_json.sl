@@ -588,10 +588,20 @@ private define test_encode ()
 }
 %}}}
 
+private define test_surrogates ()
+{
+   variable x = "\ud835\udce8\ud835\udcf8\ud835\udcfe";
+   variable s = struct {foo=x};
+   variable y = json_encode (s);
+   expect_value (y, `{"foo":"\uD835\uDCE8\uD835\uDCF8\uD835\uDCFE"}`);
+   expect_value (json_decode(y).foo, s.foo);
+}
+
 define slsh_main ()
 {
    testing_module ("json");
    test_decode ();
    test_encode ();
+   test_surrogates ();
    end_test ();
 }
