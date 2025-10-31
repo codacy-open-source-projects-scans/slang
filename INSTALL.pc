@@ -1,0 +1,59 @@
+-*- text -*-
+
+The slang library is available for OS/2, MSDOS, and WIN32 (windows
+9x/NT) systems.  This _includes_ the various GNU environments such as
+DJGPP, and MINGW32/64.  For CYGWIN, follow the UNIX instructions.
+
+Each of the src, modules, and slsh directories contains a mkfiles
+subdirectory that can be used to create Makefiles for non-CYGWIN
+builds.  The simplest approach to building the distribution is to
+invoke the build scripts located in the top-level mkfiles directory.
+
+The following instructions apply to the MinGW compiler.  There are
+several sources for this compiler suite and I cannot guaranteee that
+this procedure will work with all variants of the MinGW distribution.
+They have been tested with
+
+   <https://nuwen.net/mingw.html>
+   <https://github.com/skeeto/w64devkit>
+
+See also <https://www.youtube.com/watch?v=Al821QNdCFw> for using the
+distribution from nuwen.net.
+
+From a CMD window, a mingw32 version may be built and installed using
+a simple 3-step process:
+
+   1.   C:\path\to\slang> mkfiles\m32init.bat
+   2.   C:\path\to\slang> mingw32-make
+   3a.  C:\path\to\slang> mingw32-make install  (see below)
+   3b.  C:\path\to\slang> mingw32-make install1 (see below)
+
+The first step will generate makefiles for mingw32/mingw64.  Note that
+mingw32-make is used for both 32 and 64 bit builds.  In particular,
+this step will create a top-level makefile that contains the locations
+where the library and its components will get installed. Before, going
+on to step 2, it is a good idea to look at the makefile and edit it if
+necessary.
+
+The second step will build the library, slsh, and the modules.  If
+something goes wrong here, fix it before going to step 3.
+
+The final step installs the library and its components.  Note that
+there are two versions of the install target.  Use the one that works
+for your version of mingw32-make.  For example, the version of make
+from nuwen.net works with the first, whereas the version from
+w64devkit works only with the install1 target.
+
+The actual installation process is carried out by slsh, which was
+created in step 2. Please note, if you made any changes to the
+installation paths in the makefile after completing step 2, then you
+will need to rebuild it. That is, run `mingw32-make clean', then
+repeat step 2.
+
+Finally you will need to make sure that the $PREFIX/bin directory is
+in your PATH.  Here, $PREFIX refers to the value of the PREFIX
+variable in the Makefile.  Assuming that this has been done, you
+should be able to run `slsh' at the CMD prompt.
+
+More information on the makefile generation process is available
+in src/mkfiles/README.
