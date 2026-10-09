@@ -51,6 +51,9 @@ static Chksum_Def_Type Chksum_Table[] =
    {"crc8", _pSLchksum_crc8_new},      /* qualifiers: poly, seed, refin, refout, xorout */
    {"crc16", _pSLchksum_crc16_new},      /* qualifiers: poly, seed, ... */
    {"crc32", _pSLchksum_crc32_new},      /* qualifiers: poly, seed, ...*/
+#if (SLANG_SIZEOF_LONG >= 8)
+   {"crc64", _pSLchksum_crc64_new},      /* qualifiers: poly, seed, ...*/
+#endif
    {"sha224", _pSLchksum_sha256_new},
    {"sha256", _pSLchksum_sha256_new},
    {"sha384", _pSLchksum_sha512_new},
@@ -69,7 +72,7 @@ static Chksum_Def_Type *lookup_chksum (char *name)
 	t++;
      }
 
-   SLang_verror (SL_RunTime_Error, "Unsupported/Unknown checksum method `%s'", name);
+   SLang_verror (SL_NotImplemented_Error, "Unsupported/Unknown checksum method `%s'", name);
    return NULL;
 }
 

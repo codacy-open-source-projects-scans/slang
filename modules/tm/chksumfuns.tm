@@ -43,7 +43,7 @@
 \done
 
 \function{crc8sum}
-\synopsis{Compute an 8 bit CRC on a string}
+\synopsis{Compute an 8 bit CRC for a string}
 \usage{UChar_Type crc8sum (BString_Type bstr)}
 \description
   This function computes an 8 bit CRC for the specified string.  A
@@ -62,7 +62,7 @@
    wcdma     ; poly=0x9B, seed=0x00, refin=1, refout=1, xorout=0x00
 #v-
  The CRC-8 algorithm is specified via qualifiers.  The following
- specify the same CRC-8 algorthm:
+ specify the same CRC-8 algorithm:
 #v+
    crc8 = crc8sum ("string" ; type="maxim");
    crc8 = crc8sum ("string" ; poly=0x31, refin=1, refout=1);
@@ -101,7 +101,7 @@
 
 
 \function{crc16sum}
-\synopsis{Compute an 16 bit CRC on a string}
+\synopsis{Compute a 16 bit CRC for a string}
 \usage{UInt16_Type crc16sum (BString_Type bstr)}
 \description
   This function computes an 16 bit CRC for the specified string.  A
@@ -134,7 +134,7 @@
   xmodem     ; poly=0x1021U, seed=0x0000U, refin=0, refout=0, xorout=0x0000U
 #v-
  The CRC-16 algorithm is specified via qualifiers.  The following
- specify the same CRC-16 algorthm:
+ specify the same CRC-16 algorithm:
 #v+
    crc16 = crc16sum ("string" ; type="arc");
    crc16 = crc16sum ("string" ; poly=0x8005U, refin=1, refout=1);
@@ -173,7 +173,7 @@
 
 
 \function{crc32sum}
-\synopsis{Compute an 32 bit CRC on a string}
+\synopsis{Compute a 32 bit CRC for a string}
 \usage{UInt32_Type crc32sum (BString_Type bstr)}
 \description
   This function computes an 32 bit CRC for the specified string.  A
@@ -192,7 +192,7 @@
   xfer   ; poly=0x000000AFU, seed=0x00000000U, refin=0, refout=0, xorout=0x00000000U
 #v-
  The CRC-32 algorithm is specified via qualifiers.  The following
- specify the same CRC-32 algorthm:
+ specify the same CRC-32 algorithm:
 #v+
    crc32 = crc32sum ("string" ; type="posix");
    crc32 = crc32sum ("string" ; poly=0x04C11DB7U, xorout=0xFFFFFFFFU);
@@ -225,6 +225,49 @@
 
   Qualifiers are used to specifiy the CRC-32 variant.  See the
   documentation for \ivar{crc32sum} function for more information.
+\seealso{crc32sum, crc16sum_file, sha1sum_file}
+\done
+
+\function{crc64sum}
+\synopsis{Compute the 64 bit CRC for a string}
+\usage{UInt64_Type crc64sum (BString_Type bstr)}
+\description
+  This function computes a 64 bit CRC for the specified string.  A
+  number of variants that differ according to the polynomial, initial
+  value (seed), input/output bit reflection, and the XOR out value.
+  Supported variants include:
+#v+
+(default)  ; poly=0x42F0E1EBA9EA3693ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL
+  xz       ; poly=0x42F0E1EBA9EA3693ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL
+  nvme     ; poly=0x9A6C9329AC4BC9B5ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL
+  ecma-182 ; poly=0x42F0E1EBA9EA3693ULL, seed=0ULL, refin=0, refout=0, xorout=0ULL
+  go-iso   ; poly=0x000000000000001BULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL
+#v-
+ The CRC-64 algorithm is specified via qualifiers.  The following
+ specify the same CRC-64 algorithm:
+#v+
+   crc64 = crc64sum ("string" ; type="ecma-182");
+   crc64 = crc64sum ("string" ; poly=0x42F0E1EBA9EA3693UL);
+#v-
+\notes
+  This function is part of the \var{chksum} module:
+#v+
+    require("chksum");
+#v-
+\seealso{crc8sum, crc32sum, crc32sum_file}
+\done
+
+\function{crc64sum_file}
+\synopsis{Compute the CRC-64 value for the contents of a file}
+\usage{UInt64_Type crc64sum_file (String_Type|File_Type f)}
+\description
+  The \ifun{crc64sum_file} function computes the CRC-64 sum on the
+  contents of a file.  The file may either be specified as a string
+  giving the name of the file, or as an open stdio \dtype{File_Type}
+  pointer.  The function returns the 64-bit CRC value.
+
+  Qualifiers are used to specifiy the CRC-64 variant.  See the
+  documentation for \ivar{crc64sum} function for more information.
 \seealso{crc32sum, crc16sum_file, sha1sum_file}
 \done
 

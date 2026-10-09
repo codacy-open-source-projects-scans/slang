@@ -91,6 +91,44 @@ private define test_chksum_file (func, data)
    return s;
 }
 
+private variable HMAC_Tests = {};
+private define add_hmac_test (key, data, hash)
+{
+   list_append (HMAC_Tests, struct {key=key, data=data, hash=hash});
+}
+
+add_hmac_test ("Key",
+	       "The quick brown fox jumps over the lazy dog",
+	       "6c54a3f1708e3ed2636ed2ff9193f0be7b26889cee1052e11a7c17b6674544de");
+add_hmac_test ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+	       "Test Using Larger Than Block Size Key",
+	       "b21c03f78c2251834e5f3a4d6cac9f938f0aa2fdb1d364e5c3d9b1214dfae4e0");
+add_hmac_test ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+	       "Abc",
+	       "eb493e1d7e0ae6cb1cde915c3b7c648e28a98ef1256b12cf0286fed2f6090112");
+add_hmac_test ("",
+	       "",
+	       "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad");
+add_hmac_test ("",
+	       "Hello World",
+	       "50082da69e7e4780c867be198e795b9cd5e94e739ee9485aa95a70f60e36e73f");
+
+private define run_hmac_tests ()
+{
+   variable t, h, x;
+   foreach t (HMAC_Tests)
+     {
+	h = hmac_new ("sha256", t.key);
+	h.accumulate (t.data);
+	x = h.close ();
+	if (x != t.hash)
+	  {
+	     failed ("hmac: failed for key=%S, data=%S\n", t.key, t.data);
+	  }
+     }
+}
+
+
 private define test_module (module_name)
 {
    testing_module (module_name);
@@ -155,7 +193,10 @@ private define test_module (module_name)
    if (sha256sum_new().name != "sha256") failed ("sha256sum_new");
    if (sha384sum_new().name != "sha384") failed ("sha384sum_new");
    if (sha512sum_new().name != "sha512") failed ("sha512sum_new");
+
+   run_hmac_tests ();
 }
+
 
 define slsh_main ()
 {

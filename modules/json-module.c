@@ -1001,12 +1001,18 @@ static char *alloc_encoded_json_string (char *ptr, char *end_of_input_string, SL
      {
 	SLstrlen_Type dlen;
 	unsigned char ch = (unsigned char) *ptr;
+
 	if (ch < 0x80)
 	  {
-	     len += Len_Map[ch];
+	     dlen = Len_Map[ch];
+	     len += dlen;
+	     if (len < dlen) goto return_overflow;
 	     ptr++;
 	     continue;
 	  }
+	/* Avoid overflowing len by the possible addition of 6+6 */
+	if (len + (SLstrlen_Type)12 < len)
+	  goto return_overflow;
 
 	len += 6;
 	dlen = compute_multibyte_char_len (ptr, end_of_input_string);
@@ -1020,8 +1026,16 @@ static char *alloc_encoded_json_string (char *ptr, char *end_of_input_string, SL
 	  }
      }
 
+   if (len + (SLstrlen_Type)1 < len)
+     goto return_overflow;
+
    *lenp = len;
    return SLmalloc (len + 1);
+
+return_overflow:
+
+   SLang_verror (SL_Malloc_Error, "JSON string is too large");
+   return NULL;
 }
 /*}}}*/
 

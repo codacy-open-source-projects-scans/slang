@@ -216,6 +216,7 @@
  */
 
 #undef HAVE_PCRE_H
+#undef HAVE_PCRE2_H
 
 #undef USE_TERMCAP
 

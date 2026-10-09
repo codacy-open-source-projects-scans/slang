@@ -198,7 +198,7 @@ static int parse_double (SLFUTURE_CONST char **sp, SLFUTURE_CONST char *smax, do
    int sign;
    int expon;
    unsigned char map[256];
-   char buf[128];
+   char buf[256];
    int has_leading_zeros;
    SLFUTURE_CONST char *start_pos, *sign_pos;
    char *b, *bmax;
@@ -382,7 +382,20 @@ static int parse_double (SLFUTURE_CONST char **sp, SLFUTURE_CONST char *smax, do
      }
 
    if (expon != 0)
-     sprintf (b, "e%d", expon);
+     {
+	char ebuf[256];		       /* A 256 bit int requires 80 bytes! */
+
+	sprintf (ebuf, "e%d", expon);
+	if (b + strlen(ebuf) >= (buf + sizeof(buf)))
+	  {
+#ifdef ERANGE
+	     errno = ERANGE;
+#endif
+	     *sp = start_pos;
+	     return 0;
+	  }
+	strcpy (b, ebuf);
+     }
    else
      *b = 0;
 
@@ -760,6 +773,11 @@ try_again:		       /* used by i, x, and o, conversions */
 	   case 'c':
 	     if (has_width == 0)
 	       {
+		  if (s >= smax)
+		    {
+		       status = 0;
+		       break;
+		    }
 		  obj.o_data_type = SLANG_UCHAR_TYPE;
 		  obj.v.uchar_val = *s++;
 		  status = 1;

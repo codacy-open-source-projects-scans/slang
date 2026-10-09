@@ -22,6 +22,8 @@ USA.
 #include "slinclud.h"
 
 #include "slang.h"
+#define NEED_UINT_SUM_OVERFLOW 1
+#define NEED_UINT_MUL_OVERFLOW 1
 #include "_slang.h"
 
 struct _pSLang_BString_Type
@@ -748,13 +750,12 @@ static SLindex_Type issubbytes (void)
 static SLang_BString_Type *join_bstrings (SLang_BString_Type **data, SLuindex_Type num, SLang_BString_Type *delim,
 					  int tmp_opt_ok)
 {
-   size_t len;
-   SLuindex_Type i;
-   unsigned char *delim_ptr = NULL, *bytes = NULL;
-   SLstrlen_Type delim_len = 0;
    SLang_BString_Type *bstr;
+   unsigned char *delim_ptr = NULL, *bytes = NULL;
    unsigned char *ptr;
-   SLstrlen_Type dlen;
+   size_t len, dlen2;
+   SLuindex_Type i;
+   SLstrlen_Type dlen, delim_len = 0;
 
    (void) tmp_opt_ok;
 
@@ -775,12 +776,15 @@ static SLang_BString_Type *join_bstrings (SLang_BString_Type **data, SLuindex_Ty
 	if (NULL == SLbstring_get_pointer (data[i], &dlen))
 	  return NULL;
 
-	len += dlen;
+	if (uint_sum_overflow (len, dlen, &len))
+	  {
+	     SLang_set_error (SL_Malloc_Error);
+	     return NULL;
+	  }
      }
-
-   len += (num-1) * delim_len;
-
-   if (len != (SLstrlen_Type)len)
+   /* dlen2 = (num-1) * delim_len; len += dlen; */
+   if (uint_mul_overflow (num-1, delim_len, &dlen2)
+       || (uint_sum_overflow (len, dlen2, &len)))
      {
 	SLang_set_error (SL_Malloc_Error);
 	return NULL;

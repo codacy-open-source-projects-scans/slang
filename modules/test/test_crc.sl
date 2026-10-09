@@ -4,6 +4,7 @@ require ("chksum");
 private variable CRC8_Map = Assoc_Type[];
 private variable CRC16_Map = Assoc_Type[];
 private variable CRC32_Map = Assoc_Type[];
+private variable CRC64_Map = Assoc_Type[];
 
 private define addcrc (map, name,r0,r1,poly,seed,refin,refout,xorout)
 {
@@ -81,6 +82,14 @@ addcrc32("CRC-32/Q", 0x099A5C02U, 0x3010BF7FU, 0x814141ABU, 0x00000000U, 0, 0, 0
 addcrc32("CRC-32/JAMCRC", 0xC3016C47U, 0x340BC6D9U, 0x04C11DB7U, 0xFFFFFFFFU, 1, 1, 0x00000000U);
 addcrc32("CRC-32/XFER", 0x636909D5U, 0xBD0BE338U, 0x000000AFU, 0x00000000U, 0, 0, 0x00000000U);
 
+private define addcrc64(name,r0,r1,poly,seed,refin,refout,xorout)
+{
+   addcrc (CRC64_Map, name,r0,r1,poly,seed,refin,refout,xorout);
+}
+addcrc64("CRC-64/XZ",0x9928C3558D0BD2EBULL,0x995DC9BBDF1939FAULL, 0x42F0E1EBA9EA3693ULL, 0xFFFFFFFFFFFFFFFFULL,1,1,0xFFFFFFFFFFFFFFFFULL);
+addcrc64("CRC-64/ECMA-182",0x1D3270BB66D6316EULL,0x6C40DF5F0B497347ULL, 0x42F0E1EBA9EA3693ULL, 0ULL,0,0,0ULL),
+addcrc64("CRC-64/NVME",0x714FE33221D230E4ULL,0xF76E0B6FA8D05E0DULL, 0x9A6C9329AC4BC9B5ULL, 0xFFFFFFFFFFFFFFFFULL,1,1,0xFFFFFFFFFFFFFFFFULL);
+
 private define test_crc_file (func, data)
 {
    variable tmpfile = sprintf ("/tmp/test_crc_%d_%d", getpid(), _time());
@@ -110,7 +119,7 @@ private define check_crcmap (type, map, sumfunc, sumfile)
 	r = cs.close();
 	if (r != s.r0)
 	  {
-	     failed ("%S `%S' produced 0x%X, expected 0x%X",
+	     failed ("%S `%S' produced 0x%lX, expected 0x%lX",
 		     key, s.s0, r, s.r0);
 	  }
 
@@ -119,7 +128,7 @@ private define check_crcmap (type, map, sumfunc, sumfile)
 	r = cs.close();
 	if (r != s.r0)
 	  {
-	     failed ("%S as key `%S' produced 0x%X, expected 0x%X",
+	     failed ("%S as key `%S' produced 0x%lX, expected 0x%lX",
 		     key, s.s0, r, s.r0);
 	  }
 
@@ -133,7 +142,7 @@ private define check_crcmap (type, map, sumfunc, sumfile)
 	r = cs.close();
 	if (r != s.r1)
 	  {
-	     failed ("%S `%S' produced 0x%X, expected 0x%X",
+	     failed ("%S `%S' produced 0x%lX, expected 0x%lX",
 		     key, s.s1, r, s.r1);
 	  }
 
@@ -163,6 +172,13 @@ private define test_module (module_name)
    if (crc8_new().name != "crc8") failed ("crc8_new");
    if (crc16_new().name != "crc16") failed ("crc16_new");
    if (crc32_new().name != "crc32") failed ("crc32_new");
+
+   try
+     {
+	if (crc64_new().name != "crc64") failed ("crc64_new");
+	check_crcmap ("crc64", CRC64_Map, &crc64sum, &crc64sum_file);
+     }
+   catch NotImplementedError: () = fprintf (stderr, "(crc64 not implemented -- skipping)");
 }
 
 define slsh_main ()

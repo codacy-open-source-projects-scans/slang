@@ -1,0 +1,107 @@
+zlib_deflate
+
+ SYNOPSIS
+  Compress a string
+
+ USAGE
+  zstr = zlib_deflate (str)
+
+ DESCRIPTION
+
+ QUALIFIERS
+  ; level=val:
+  ; method=val:
+  ; wbits=val:
+  ; memlevel=val:
+  ; strategy=val:
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+  zlib_inflate, zlib_inflate_new
+
+--------------------------------------------------------------
+
+zlib_deflate_new
+
+ SYNOPSIS
+  Create a zlib deflation object
+
+ USAGE
+  zlibobj = zlib_deflate_new ()
+
+ DESCRIPTION
+
+ QUALIFIERS
+  ; level=val: one of: ZLIB_NO_COMPRESSION, ZLIB_BEST_SPEED,
+ZLIB_BEST_COMPRESSION,
+ZLIB_DEFAULT_COMPRESSION (default: ZLIB_DEFAULT_COMPRESSION)
+  ; method=val: ZLIB_DEFLATED (default: ZLIB_DEFLATED)
+  ; wbits=val: Window size in bits, 8-15 is recommended (default: 15)
+  ; memlevel=val: Specifies the amount of memory to use; 1-9,
+default=8
+  ; strategy=val: one of: ZLIB_DEFAULT_STRATEGY, ZLIB_FILTERED,
+ZLIB_HUFFMAN_ONLY, ZLIB_RLE,ZLIB_FIXED (default: ZLIB_DEFAULT_STRATEGY)
+
+ METHODS
+  ..deflate : compress a string
+  ..reset : Resets the stream keeping various state parameters
+  ..flush : Flush pending output to the output buffer
+
+ EXAMPLE
+
+ NOTES
+ See the zlib compression library documentation for more information
+ regarding the qualifiers and methods.  Note that this module uses ZLIB as a
+ prefix whereas the underlying library API uses Z, e.g.,
+ `ZLIB_FIXED' vs `Z_FIXED'.
+
+ SEE ALSO
+  zlib_deflate, zlib_inflate_new
+
+--------------------------------------------------------------
+
+zlib_inflate
+
+ SYNOPSIS
+  Uncompress a string
+
+ USAGE
+  str = zlib_inflate (zstr)
+
+ DESCRIPTION
+
+ QUALIFIERS
+  ; wbits=val:
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------
+
+zlib_inflate_new
+
+ SYNOPSIS
+  Create a zlib inflation object
+
+ USAGE
+
+ DESCRIPTION
+
+ METHODS
+  .inflate :
+  .reset :
+  .flush :
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------

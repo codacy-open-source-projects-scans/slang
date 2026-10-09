@@ -125,10 +125,16 @@ This module provides an interface to the Oniguruma regular expression
 library.  Use \exmp{require("onig")} to load it.
 #i onigfuns.tm
 
-\chapter{Perl Compatible Regular Expression Module}
-This module provides an interface to the PCRE library.  It may be
-loaded using \exmp{require("pcre")}.
+\chapter{Perl Compatible Regular Expression Module (v1)}
+This module provides an interface to the PCRE v1 library.  It may be
+loaded using \exmp{require("pcre")}.  Note that PCRE v1 is obsolete.
+Consider migrating to PCRE v2.
 #i pcrefuns.tm
+
+\chapter{Perl Compatible Regular Expression Module (v2)}
+This module provides an interface to the PCRE v1 library.  It may be
+loaded using \exmp{require("pcre2")}.
+#i pcre2funs.tm
 
 \chapter{Portable Network Graphics Module}
 The \module{png} module includes a number of functions for dealing

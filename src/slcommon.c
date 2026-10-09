@@ -223,7 +223,7 @@ SLFUTURE_VOID *_SLcalloc (SLstrlen_Type nelems, SLstrlen_Type len)
 {
    SLstrlen_Type nlen = nelems * len;
 
-   if (nelems && (nlen/nelems != len))
+   IF_UNLIKELY (nelems && (nlen/nelems != len))
      {
 	SLang_set_error (SL_Malloc_Error);
 	return NULL;
@@ -237,6 +237,24 @@ SLFUTURE_VOID *SLcalloc (SLstrlen_Type nelems, SLstrlen_Type len)
    if (p != NULL) memset (p, 0, len*nelems);
    return p;
 }
+
+#if 0
+/* Some functions use size_t to compute a buffer size, and then call
+ * SLmalloc with the computed size.  However, v2 of the library's SLmalloc
+ * uses an unsigned int size.  This routine is designed to catch integer
+ * overflow when sizeof(size_t) > sizeof(unsigned int)
+ */
+SLFUTURE_VOID *_pSLmalloc_unsigned (size_t len)
+{
+   const unsigned int uint_max = ~((unsigned int)0);
+   if (len > uint_max)
+     {
+	SLang_set_error (SL_MALLOC_ERROR);
+	return NULL;
+     }
+   return SLmalloc ((SLstrlen_Type) len);
+}
+#endif
 
 int _pSLsecure_issetugid (void)
 {

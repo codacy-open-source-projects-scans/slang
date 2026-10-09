@@ -1533,13 +1533,20 @@ static void free_smg_update_data (SLrline_Type *rli, VOID_STAR cd)
      SLfree ((char *)cd);
 }
 
+static unsigned int get_edit_width (unsigned int desired_width)
+{
+   if (desired_width < 1) return 80;
+   if (desired_width > SLRL_DISPLAY_BUFFER_SIZE) return SLRL_DISPLAY_BUFFER_SIZE;
+   return desired_width;
+}
+
 static int check_window_size_and_redraw (SLrline_Type *rli, RLine_SMG_Update_Type *s)
 {
    if ((s->num_screen_cols != SLtt_Screen_Cols)
        || (s->num_screen_rows != SLtt_Screen_Rows))
      {
 	SLsmg_reinit_smg ();
-	rli->edit_width = s->num_screen_cols = SLtt_Screen_Cols;
+	rli->edit_width = s->num_screen_cols = get_edit_width (SLtt_Screen_Cols);
 	s->num_screen_rows = SLtt_Screen_Rows;
 	SLrline_redraw (rli);
 	return 1;
@@ -1647,7 +1654,7 @@ static int try_smg_multiline_mode (SLrline_Type *rli)
    rli->update_postread_hook = rline_smg_postread;
    rli->update_display_width_changed_hook = rline_smg_display_width_changed;
 
-   rli->edit_width = cd->num_screen_cols = SLtt_Screen_Cols;
+   rli->edit_width = cd->num_screen_cols = (int) get_edit_width (SLtt_Screen_Cols);
    cd->num_screen_rows = SLtt_Screen_Rows;
 
    if (-1 == _pSLsmg_init_smg_cmdline ())
@@ -1667,8 +1674,7 @@ SLrline_Type *SLrline_open (unsigned int width, unsigned int flags)
    if (NULL == (rli = (SLrline_Type *)SLcalloc (1, sizeof (SLrline_Type))))
      return NULL;
 
-   if (width == 0)
-     width = 80;
+   width = get_edit_width (width);
 
    if (width < 256) rli->buf_len = 256;
    else rli->buf_len = width;
@@ -1969,8 +1975,8 @@ int SLrline_set_display_width (SLrline_Type *rli, unsigned int w)
 
    if (rli == NULL)
      return -1;
-   if (w < 1)
-     w = 80;
+
+   w = get_edit_width (w);
 
    old_width = rli->edit_width;
    rli->edit_width = w;

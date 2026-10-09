@@ -599,6 +599,14 @@ static void SLcurses_placechar (SLcurses_Window_Type *w, SLwchar_Type wch,
 	return;
      }
 
+   /* Security fix: clamp width to the columns remaining in this line so that
+    * the continuation-fill loop below never writes past the line buffer, which
+    * has exactly w->ncols cells (e.g. ncols==1 with a width==2 glyph).
+    * (Claude Opus 4.8)
+    */
+   if ((unsigned int) width > w->ncols - w->_curx)
+     width = (int) (w->ncols - w->_curx);
+
    b = &w->lines[w->_cury][w->_curx];
    if (b->main == SLCURSES_NULLATTR)
      {

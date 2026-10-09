@@ -1,4 +1,5 @@
 dnl# -*- mode: sh; mode: fold -*-
+dnl# 0.4.0-0: Added JD_SANITIZE macro to deal with shell variables from libs such as pcre2-8
 dnl# 0.3.4-2: Use --export-dynamic instead of -export-dynamic
 dnl# 0.3.4-1: Added /{lib,etc}/terminfo to terminfo directory list
 dnl# 0.3.4-0: Added $(CPPFLAGS)
@@ -204,17 +205,32 @@ AC_SUBST(RPATH)dnl
 
 dnl#}}}
 
+dnl# Usage: JD_UPPERCASE(invar, outvar)
+dnl# This function uppercases the value of invar, and converts all non-alphanumeric to _
+dnl# It assigns the reslt to a new variable given by outvar
 AC_DEFUN([JD_UPPERCASE], dnl#{{{
 [
-changequote(<<, >>)dnl
-define(<<$2>>, translit($1, [a-z], [A-Z]))dnl
-changequote([, ])dnl
+  changequote(<<, >>)dnl
+  define(<<$2>>, translit(patsubst(<<$1>>, <<[^a-zA-Z0-9]>>, <<_>>), [a-z], [A-Z]))dnl
+  dnl# define(<<$2>>, translit($1, [a-z], [A-Z]))dnl
+  changequote([, ])dnl
+])
+#}}}
+
+dnl# Usage: JD_SANITIZE(invar, outvar)
+dnl# This function converts all non-alphanumeric in the value of invar to _
+dnl# It assigns the reslt to a new variable given by outvar
+AC_DEFUN([JD_SANITIZE], dnl#{{{
+[
+  changequote(<<, >>)dnl
+  define(<<$2>>, patsubst(<<$1>>, <<[^a-zA-Z0-9]>>, <<_>>))dnl
+  changequote([, ])dnl
 ])
 #}}}
 
 AC_DEFUN([JD_SIMPLE_LIB_DIR], dnl#{{{
 [
-JD_UPPERCASE($1,JD_UP_NAME)
+JD_UPPERCASE($1,[JD_UP_NAME])
 JD_UP_NAME[]_LIB_DIR=$JD_Above_Dir/$1/libsrc/"$ARCH"objs
 JD_UP_NAME[]_INCLUDE=$JD_Above_Dir/$1/libsrc
 
@@ -812,42 +828,43 @@ dnl# jd_xxx_include_dir and jd_xxx_library_dir.  It does not perform any
 dnl# substitutions, nor check for the existence of the supplied values.
 AC_DEFUN([JD_WITH_LIBRARY_PATHS], dnl#{{{
 [
- JD_UPPERCASE($1,JD_ARG1)
- jd_$1_include_dir=""
- jd_$1_library_dir=""
- if test X"$jd_with_$1_library" = X
+ JD_UPPERCASE($1,[JD_ARG1])
+ JD_SANITIZE($1,[jd_arg1])
+ jd_[]jd_arg1[]_include_dir=""
+ jd_[]jd_arg1[]_library_dir=""
+ if test X"$jd_with_[]jd_arg1[]_library" = X
  then
-   jd_with_$1_library=""
+   jd_with_[]jd_arg1[]_library=""
  fi
 
  AC_ARG_WITH($1,
   [  --with-$1=DIR      Use DIR/lib and DIR/include for $1],
-  [jd_with_$1_arg=$withval], [jd_with_$1_arg=unspecified])
+  [jd_with_[]jd_arg1[]_arg=$withval], [jd_with_[]jd_arg1[]_arg=unspecified])
 
- case "x$jd_with_$1_arg" in
+ case "x$jd_with_[]jd_arg1[]_arg" in
    xno)
-     jd_with_$1_library="no"
+     jd_with_[]jd_arg1[]_library="no"
     ;;
    x)
-    dnl# AC_MSG_ERROR(--with-$1 requires a value-- try yes or no)
-    jd_with_$1_library="yes"
+    dnl# AC_MSG_ERROR(--with-[]jd_arg1[] requires a value-- try yes or no)
+    jd_with_[]jd_arg1[]_library="yes"
     ;;
    xunspecified)
     ;;
    xyes)
-    jd_with_$1_library="yes"
+    jd_with_[]jd_arg1[]_library="yes"
     ;;
    *)
-    jd_with_$1_library="yes"
-    jd_$1_include_dir="$jd_with_$1_arg"/include
-    jd_$1_library_dir="$jd_with_$1_arg"/lib
+    jd_with_[]jd_arg1[]_library="yes"
+    jd_[]jd_arg1[]_include_dir="$jd_with_[]jd_arg1[]_arg"/include
+    jd_[]jd_arg1[]_library_dir="$jd_with_[]jd_arg1[]_arg"/lib
     ;;
  esac
 
  AC_ARG_WITH($1lib,
   [  --with-$1lib=DIR   $1 library in DIR],
-  [jd_with_$1lib_arg=$withval], [jd_with_$1lib_arg=unspecified])
- case "x$jd_with_$1lib_arg" in
+  [jd_with_[]jd_arg1[]lib_arg=$withval], [jd_with_[]jd_arg1[]lib_arg=unspecified])
+ case "x$jd_with_[]jd_arg1[]lib_arg" in
    xunspecified)
     ;;
    xno)
@@ -856,15 +873,15 @@ AC_DEFUN([JD_WITH_LIBRARY_PATHS], dnl#{{{
     AC_MSG_ERROR(--with-$1lib requres a value)
     ;;
    *)
-    jd_with_$1_library="yes"
-    jd_$1_library_dir="$jd_with_$1lib_arg"
+    jd_with_[]jd_arg1[]_library="yes"
+    jd_[]jd_arg1[]_library_dir="$jd_with_[]jd_arg1[]lib_arg"
     ;;
  esac
 
  AC_ARG_WITH($1inc,
   [  --with-$1inc=DIR   $1 include files in DIR],
-  [jd_with_$1inc_arg=$withval], [jd_with_$1inc_arg=unspecified])
- case "x$jd_with_$1inc_arg" in
+  [jd_with_[]jd_arg1[]inc_arg=$withval], [jd_with_[]jd_arg1[]inc_arg=unspecified])
+ case "x$jd_with_[]jd_arg1[]inc_arg" in
    x)
      AC_MSG_ERROR(--with-$1inc requres a value)
      ;;
@@ -873,8 +890,8 @@ AC_DEFUN([JD_WITH_LIBRARY_PATHS], dnl#{{{
    xno)
      ;;
    *)
-    jd_with_$1_library="yes"
-    jd_$1_include_dir="$jd_with_$1inc_arg"
+    jd_with_[]jd_arg1[]_library="yes"
+    jd_[]jd_arg1[]_include_dir="$jd_with_[]jd_arg1[]inc_arg"
    ;;
  esac
 ])
@@ -892,20 +909,20 @@ AC_DEFUN([JD_CHECK_FOR_LIBRARY], dnl#{{{
 [
   AC_REQUIRE([JD_EXPAND_PREFIX])dnl
   AC_REQUIRE([JD_GET_SYS_INCLIBS])dnl
-  dnl JD_UPPERCASE($1,JD_ARG1)
   JD_WITH_LIBRARY_PATHS($1)
+  JD_SANITIZE($1,[jd_arg1])
   AC_MSG_CHECKING(for the $1 library and header files $2)
-  if test X"$jd_with_$1_library" != Xno
+  if test X"$jd_with_[]jd_arg1[]_library" != Xno
   then
-    jd_$1_inc_file=$2
-    dnl# jd_with_$1_library="yes"
+    jd_[]jd_arg1[]_inc_file=$2
+    dnl# jd_with_[]jd_arg1[]_library="yes"
 
-    if test "X$jd_$1_inc_file" = "X"
+    if test "X$jd_[]jd_arg1[]_inc_file" = "X"
     then
-       jd_$1_inc_file=$1.h
+       jd_[]jd_arg1[]_inc_file=$1.h
     fi
 
-    if test X"$jd_$1_include_dir" = X
+    if test X"$jd_[]jd_arg1[]_include_dir" = X
     then
       inc_and_lib_dirs="\
          $jd_prefix_incdir,$jd_prefix_libdir \
@@ -936,9 +953,9 @@ AC_DEFUN([JD_CHECK_FOR_LIBRARY], dnl#{{{
 	   exts="so a"
       esac
 
-      xincfile="$jd_$1_inc_file"
+      xincfile="$jd_[]jd_arg1[]_inc_file"
       xlibfile="lib$1"
-      jd_with_$1_library="no"
+      jd_with_[]jd_arg1[]_library="no"
 
       for include_and_lib in $inc_and_lib_dirs
       do
@@ -952,9 +969,9 @@ AC_DEFUN([JD_CHECK_FOR_LIBRARY], dnl#{{{
 	  do
 	    if test -r "$xlibdir/$xlibfile.$E"
 	    then
-	      jd_$1_include_dir="$xincdir"
-	      jd_$1_library_dir="$xlibdir"
-	      jd_with_$1_library="yes"
+	      jd_[]jd_arg1[]_include_dir="$xincdir"
+	      jd_[]jd_arg1[]_library_dir="$xlibdir"
+	      jd_with_[]jd_arg1[]_library="yes"
 	      found=1
 	      break
 	    fi
@@ -968,30 +985,30 @@ AC_DEFUN([JD_CHECK_FOR_LIBRARY], dnl#{{{
     fi
   fi
 
-  if test X"$jd_$1_include_dir" != X -a X"$jd_$1_library_dir" != X
+  if test X"$jd_[]jd_arg1[]_include_dir" != X -a X"$jd_[]jd_arg1[]_library_dir" != X
   then
-    AC_MSG_RESULT(yes: $jd_$1_library_dir and $jd_$1_include_dir)
-    jd_with_$1_library="yes"
+    AC_MSG_RESULT(yes: $jd_[]jd_arg1[]_library_dir and $jd_[]jd_arg1[]_include_dir)
+    jd_with_[]jd_arg1[]_library="yes"
     dnl#  Avoid using /usr/lib and /usr/include because of problems with
     dnl#  gcc on some solaris systems.
-    JD_ARG1[]_LIB=-L$jd_$1_library_dir
-    JD_ARG1[]_LIB_DIR=$jd_$1_library_dir
-    if test "X$jd_$1_library_dir" = "X/usr/lib" -o "X$jd_$1_include_dir" = "X/usr/include"
+    JD_ARG1[]_LIB=-L$jd_[]jd_arg1[]_library_dir
+    JD_ARG1[]_LIB_DIR=$jd_[]jd_arg1[]_library_dir
+    if test "X$jd_[]jd_arg1[]_library_dir" = "X/usr/lib" -o "X$jd_[]jd_arg1[]_include_dir" = "X/usr/include"
     then
       JD_ARG1[]_LIB=""
     else
-      JD_SET_RPATH($jd_$1_library_dir)
+      JD_SET_RPATH($jd_[]jd_arg1[]_library_dir)
     fi
 
-    JD_ARG1[]_INC=-I$jd_$1_include_dir
-    JD_ARG1[]_INC_DIR=$jd_$1_include_dir
-    if test "X$jd_$1_include_dir" = "X/usr/include"
+    JD_ARG1[]_INC=-I$jd_[]jd_arg1[]_include_dir
+    JD_ARG1[]_INC_DIR=$jd_[]jd_arg1[]_include_dir
+    if test "X$jd_[]jd_arg1[]_include_dir" = "X/usr/include"
     then
       JD_ARG1[]_INC=""
     fi
   else
     AC_MSG_RESULT(no)
-    jd_with_$1_library="no"
+    jd_with_[]jd_arg1[]_library="no"
     JD_ARG1[]_INC=""
     JD_ARG1[]_LIB=""
     JD_ARG1[]_INC_DIR=""

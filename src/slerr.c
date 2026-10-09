@@ -505,11 +505,21 @@ static void print_error (int msg_type, SLFUTURE_CONST char *err)
 
 static void print_queue (void)
 {
-   if (-1 == _pSLerr_init ())
-     print_error (_SLERR_MSG_ERROR, "Unable to initialize SLerr module");
+   static volatile int active = -1;
 
-   if (_pSLang_Error == 0)
+   if (active == -1)
+     {
+	/* first time through */
+	if (-1 == _pSLerr_init ())
+	  print_error (_SLERR_MSG_ERROR, "Unable to initialize SLerr module");
+
+	active = 0;
+     }
+
+   if (active || (_pSLang_Error == 0))
      return;
+
+   active = 1;
 
    if (Active_Error_Queue != NULL)
      {
@@ -530,6 +540,8 @@ static void print_queue (void)
 	print_error (_SLERR_MSG_ERROR, Static_Error_Message);
 	Static_Error_Message = NULL;
      }
+
+   active = 0;
 }
 
 /* This function concatenates messages in the queue of the specified type and

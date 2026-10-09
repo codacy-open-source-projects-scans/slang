@@ -133,7 +133,8 @@ static png_byte **allocate_image_pointers (png_uint_32 height, png_byte *data, p
    png_byte **image_pointers;
    png_uint_32 i;
 
-   if (NULL == (image_pointers = (png_byte **) SLmalloc (height * sizeof (png_byte *))))
+   /* Use SLcalloc(a,b) instead of SLmalloc(a*b) to check of overflow of (a*b) */
+   if (NULL == (image_pointers = (png_byte **) SLcalloc (height, sizeof (png_byte *))))
      return NULL;
 
    if (flip)
@@ -359,20 +360,27 @@ static SLang_Array_Type *read_image_internal (char *file, int flip, int *color_t
 
    /* Use the high-level interface */
    rowbytes = png_get_rowbytes (png, info);
-   if (rowbytes > width * sizeof_type)
+   if ((rowbytes == 0) || (rowbytes > width * sizeof_type))
      {
 	SLang_verror (SL_INTERNAL_ERROR, "Unexpected value returned from png_get_rowbytes");
 	free_png_type (p);
 	return NULL;
      }
+   rowbytes = width*sizeof_type;
+   if (rowbytes/sizeof_type != width)
+     {
+	SLang_set_error (SL_Malloc_Error);
+	free_png_type (p);
+	return NULL;
+     }
 
-   if (NULL == (data = (png_byte *) SLmalloc (height * width * sizeof_type)))
+   if (NULL == (data = (png_byte *) SLcalloc (height, rowbytes)))
      {
 	free_png_type (p);
 	return NULL;
      }
 
-   if (NULL == (image_pointers = allocate_image_pointers (height, data, width * sizeof_type, flip)))
+   if (NULL == (image_pointers = allocate_image_pointers (height, data, rowbytes, flip)))
      {
 	SLfree ((char *) data);
 	free_png_type (p);

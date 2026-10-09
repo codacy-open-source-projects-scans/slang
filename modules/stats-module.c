@@ -251,7 +251,13 @@ static double mann_whitney_cdf (unsigned int m, unsigned int n, unsigned int s) 
 
    M = m*n/2;
 
-   f = (double *)SLmalloc ((M+1)*sizeof(double));
+   if (M + 1U < M)
+     {
+	/* Check overflow in M+1, allow SLcalloc to check the rest */
+	SLang_set_error (SL_Malloc_Error);
+	return -1.0;
+     }
+   f = (double *)SLcalloc (M+1,sizeof(double));
    if (f == NULL)
      return -1.0;
    f[0] = 1.0;

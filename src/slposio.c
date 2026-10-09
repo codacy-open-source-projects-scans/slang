@@ -1093,6 +1093,9 @@ static SLang_IConstant_Type PosixIO_Consts [] =
 #ifdef O_TRUNC
    MAKE_ICONSTANT("O_TRUNC", O_TRUNC),
 #endif
+#ifdef O_NOFOLLOW
+   MAKE_ICONSTANT("O_NOFOLLOW", O_NOFOLLOW),
+#endif
 #ifndef O_BINARY
 # define O_BINARY 0
 #endif

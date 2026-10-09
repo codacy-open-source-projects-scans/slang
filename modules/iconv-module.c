@@ -175,6 +175,12 @@ static void _iconv(ICONV_Type *it, SLang_BString_Type *bstr)
 		  long outdelta;
 
 		  outdelta = outstr - buf;
+		  /* Check for overflow before attempting to realloc */
+		  if (bufn > ((size_t)(SLstrlen_Type)-1)/2)
+		    {
+		       SLang_set_error (SL_Malloc_Error);
+		       goto error;
+		    }
 		  outn += bufn;
 		  bufn += bufn;
 		  p = (char *)SLrealloc(buf, bufn);

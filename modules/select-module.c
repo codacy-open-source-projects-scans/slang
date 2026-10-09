@@ -15,6 +15,18 @@
 
 SLANG_MODULE(select);
 
+static int check_fd (int fd)
+{
+   if ((fd < 0) || (fd >= FD_SETSIZE))
+     {
+	SLang_verror (SL_INVALID_PARM,
+		      "select: fd=%d is outside supported range 0 - %d",
+		      fd, FD_SETSIZE - 1);
+	return -1;
+     }
+   return 0;
+}
+
 static int pop_fd_set (SLang_Array_Type **ats,
 		       fd_set **fd_set_p, fd_set *fd_set_buf,
 		       int *max_n)
@@ -45,6 +57,9 @@ static int pop_fd_set (SLang_Array_Type **ats,
 
 	if (-1 == SLfile_get_fd (f[i], &fd))
 	  continue;
+
+	if (-1 == check_fd (fd))
+	  return -1;
 
 	if (fd > *max_n)
 	  *max_n = fd;
@@ -77,6 +92,9 @@ static SLang_Array_Type *do_fdisset (int nready, SLang_Array_Type *fds, fd_set *
 	     if (-1 == SLfile_get_fd (f[i], &fd))
 	       continue;
 
+	     if (-1 == check_fd (fd))
+	       return NULL;
+
 	     if (FD_ISSET(fd, fdset))
 	       nready++;
 	  }
@@ -98,6 +116,7 @@ static SLang_Array_Type *do_fdisset (int nready, SLang_Array_Type *fds, fd_set *
 
 	     if (-1 == SLfile_get_fd (f[i], &fd))
 	       continue;
+	     /* The validity of fd was checked by the nready counting loop above */
 
 	     if (FD_ISSET(fd, fdset))
 	       *indx++ = (int) i;

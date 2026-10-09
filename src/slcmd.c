@@ -150,12 +150,8 @@ int SLcmd_execute_string (SLFUTURE_CONST char *str, SLcmd_Cmd_Table_Type *table)
    SLFUTURE_CONST char *s, *arg_type, *last_str, *cmd_name;
    SLcmd_Cmd_Type *cmd;
    char *buf;
-   int token_present;
-   int i;
-   int status;
-   SLstrlen_Type len;
-   int argc;
-   SLstrlen_Type space;
+   SLstrlen_Type len, buflen, space;
+   int token_present, i, status, argc;
 
    table->argc = 0;
    table->string_args = NULL;
@@ -166,6 +162,7 @@ int SLcmd_execute_string (SLFUTURE_CONST char *str, SLcmd_Cmd_Table_Type *table)
    buf = SLmake_string (str);
    if (buf == NULL)
      return -1;
+   buflen = strlen (str);
 
    status = extract_token (&str, buf);
    if (status <= 0)
@@ -231,18 +228,27 @@ int SLcmd_execute_string (SLFUTURE_CONST char *str, SLcmd_Cmd_Table_Type *table)
 	     else if ((*b == '\'') && (len > 1))
 	       {
 		  SLwchar_Type ch;
+		  char chbuf[64];
+
 		  b++;
 		  len -= 2;
 		  b[len] = 0;
 		  guess_type = SLANG_INT_TYPE;
-		  ch = *b;
+		  ch = (unsigned char) *b;   /* avoid signed char here */
 		  if (ch == '\\')
 		    {
 		       if (NULL == _pSLexpand_escaped_char (b, b+len, &ch, NULL))
 			 goto error;
 		    }
-		  sprintf (buf, "%lu", (unsigned long)ch);
-		  len = strlen (buf);
+		  sprintf (chbuf, "%lu", (unsigned long)ch);
+		  len = strlen (chbuf);
+		  /* buflen is 1 less than the allocated buffer size to account for trailing \0 */
+		  if (len > buflen)
+		    {
+		       _pSLang_verror (SL_INVALID_PARM, "%s: character value too large", cmd_name);
+		       goto error;
+		    }
+		  strcpy (buf, chbuf);
 	       }
 	     else guess_type = SLang_guess_type (buf);
 	  }

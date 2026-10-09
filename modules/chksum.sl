@@ -73,6 +73,19 @@ chksum_add_crc32_subtype("Q";		poly=0x814141ABU, seed=0x00000000U, refin=0, refo
 chksum_add_crc32_subtype("JAMCRC";	poly=0x04C11DB7U, seed=0xFFFFFFFFU, refin=1, refout=1, xorout=0x00000000U);
 chksum_add_crc32_subtype("XFER";	poly=0x000000AFU, seed=0x00000000U, refin=0, refout=0, xorout=0x00000000U);
 
+private variable CRC64_Map = Assoc_Type[Struct_Type];
+define chksum_add_crc64_subtype (subtype)
+{
+   subtype = strtrans(subtype, "-_", "");
+   CRC64_Map[strlow(subtype)] = @__qualifiers;
+}
+
+chksum_add_crc64_subtype("";	     poly=0x42F0E1EBA9EA3693ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL);
+chksum_add_crc64_subtype("XZ";	     poly=0x42F0E1EBA9EA3693ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL);
+chksum_add_crc64_subtype("NVME";     poly=0x9A6C9329AC4BC9B5ULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL);
+chksum_add_crc64_subtype("ECMA-182"; poly=0x42F0E1EBA9EA3693ULL, seed=0ULL, refin=0, refout=0, xorout=0ULL);
+chksum_add_crc64_subtype("GO-ISO";   poly=0x000000000000001BULL, seed=0xFFFFFFFFFFFFFFFFULL, refin=1, refout=1, xorout=0xFFFFFFFFFFFFFFFFULL);
+
 private define parse_name (name)
 {
    name = strlow (name);
@@ -103,6 +116,8 @@ private define parse_name (name)
      map = CRC16_Map;
    else if (name == "crc32")
      map = CRC32_Map;
+   else if (name == "crc64")
+     map = CRC64_Map;
 
    if ((map != NULL)
        && assoc_key_exists (map, subtype))
@@ -265,6 +280,24 @@ define crc32sum_file (file)
    return chksum_file (file, "crc32";; __qualifiers);
 }
 
+define crc64_new ()
+{
+   return chksum_new ("crc64";; __qualifiers);
+}
+
+define crc64sum (str)
+{
+   variable name, q;
+   (name, q) = parse_name ("crc64";; __qualifiers);
+   variable c = _chksum_new (name;; q);
+   _chksum_accumulate (c, str);
+   return _chksum_close(c);
+}
+
+define crc64sum_file (file)
+{
+   return chksum_file (file, "crc64";; __qualifiers);
+}
 
 %%%
 define sha256sum_new ()
@@ -396,4 +429,11 @@ define hmac_new (name, key)
 	close = &hmac_close,
 	accumulate = &chksum_accumulate,
      };
+}
+
+define hmacsum (name, key, data)
+{
+   variable h = hmac_new (name, key);
+   h.accumulate (data);
+   return h.close (;;__qualifiers);
 }

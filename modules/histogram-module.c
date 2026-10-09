@@ -442,7 +442,13 @@ static SLindex_Type *alloc_reverse_indices (SLuindex_Type num)
    SLuindex_Type i;
    SLindex_Type *r;
 
-   if (NULL == (r = (SLindex_Type *) SLmalloc ((num + 1) * sizeof(SLindex_Type))))
+   if (num == (SLuindex_Type)-1)
+     {
+	/* overflow */
+	SLang_set_error (SL_MALLOC_ERROR);
+	return NULL;
+     }
+   if (NULL == (r = (SLindex_Type *) SLcalloc ((num + 1), sizeof(SLindex_Type))))
      return NULL;
 
    for (i = 0; i < num; i++)

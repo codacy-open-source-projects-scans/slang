@@ -653,6 +653,11 @@ ONIG_INC_DIR
 ONIG_LIB_DIR
 ONIG_INC
 ONIG_LIB
+PCRE2_MODULE
+PCRE2_8_INC_DIR
+PCRE2_8_LIB_DIR
+PCRE2_8_INC
+PCRE2_8_LIB
 PCRE_MODULE
 PCRE_INC_DIR
 PCRE_LIB_DIR
@@ -772,6 +777,9 @@ enable_warnings
 with_pcre
 with_pcrelib
 with_pcreinc
+with_pcre2_8
+with_pcre2_8lib
+with_pcre2_8inc
 with_onig
 with_oniglib
 with_oniginc
@@ -1435,6 +1443,9 @@ Optional Packages:
   --with-pcre=DIR      Use DIR/lib and DIR/include for pcre
   --with-pcrelib=DIR   pcre library in DIR
   --with-pcreinc=DIR   pcre include files in DIR
+  --with-pcre2-8=DIR      Use DIR/lib and DIR/include for pcre2-8
+  --with-pcre2-8lib=DIR   pcre2-8 library in DIR
+  --with-pcre2-8inc=DIR   pcre2-8 include files in DIR
   --with-onig=DIR      Use DIR/lib and DIR/include for onig
   --with-oniglib=DIR   onig library in DIR
   --with-oniginc=DIR   onig include files in DIR
@@ -7082,6 +7093,8 @@ EOF
 
 
 
+
+
  jd_pcre_include_dir=""
  jd_pcre_library_dir=""
  if test X"$jd_with_pcre_library" = X
@@ -7160,6 +7173,8 @@ fi
     jd_pcre_include_dir="$jd_with_pcreinc_arg"
    ;;
  esac
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the pcre library and header files " >&5
 $as_echo_n "checking for the pcre library and header files ... " >&6; }
@@ -7330,7 +7345,7 @@ $as_echo "no" >&6; }
 
 
 
-if test $jd_with_pcre_library = yes
+if test "$jd_with_pcre_library" = yes
 then
   PCRE_MODULE="pcre-module.so"
 
@@ -7341,6 +7356,277 @@ else
   PCRE_MODULE=""
   missingmodules="$missingmodules pcre"
 fi
+
+
+
+
+
+
+
+
+ jd_pcre2_8_include_dir=""
+ jd_pcre2_8_library_dir=""
+ if test X"$jd_with_pcre2_8_library" = X
+ then
+   jd_with_pcre2_8_library=""
+ fi
+
+
+# Check whether --with-pcre2-8 was given.
+if test "${with_pcre2_8+set}" = set; then :
+  withval=$with_pcre2_8; jd_with_pcre2_8_arg=$withval
+else
+  jd_with_pcre2_8_arg=unspecified
+fi
+
+
+ case "x$jd_with_pcre2_8_arg" in
+   xno)
+     jd_with_pcre2_8_library="no"
+    ;;
+   x)
+        jd_with_pcre2_8_library="yes"
+    ;;
+   xunspecified)
+    ;;
+   xyes)
+    jd_with_pcre2_8_library="yes"
+    ;;
+   *)
+    jd_with_pcre2_8_library="yes"
+    jd_pcre2_8_include_dir="$jd_with_pcre2_8_arg"/include
+    jd_pcre2_8_library_dir="$jd_with_pcre2_8_arg"/lib
+    ;;
+ esac
+
+
+# Check whether --with-pcre2-8lib was given.
+if test "${with_pcre2_8lib+set}" = set; then :
+  withval=$with_pcre2_8lib; jd_with_pcre2_8lib_arg=$withval
+else
+  jd_with_pcre2_8lib_arg=unspecified
+fi
+
+ case "x$jd_with_pcre2_8lib_arg" in
+   xunspecified)
+    ;;
+   xno)
+    ;;
+   x)
+    as_fn_error $? "--with-pcre2-8lib requres a value" "$LINENO" 5
+    ;;
+   *)
+    jd_with_pcre2_8_library="yes"
+    jd_pcre2_8_library_dir="$jd_with_pcre2_8lib_arg"
+    ;;
+ esac
+
+
+# Check whether --with-pcre2-8inc was given.
+if test "${with_pcre2_8inc+set}" = set; then :
+  withval=$with_pcre2_8inc; jd_with_pcre2_8inc_arg=$withval
+else
+  jd_with_pcre2_8inc_arg=unspecified
+fi
+
+ case "x$jd_with_pcre2_8inc_arg" in
+   x)
+     as_fn_error $? "--with-pcre2-8inc requres a value" "$LINENO" 5
+     ;;
+   xunspecified)
+     ;;
+   xno)
+     ;;
+   *)
+    jd_with_pcre2_8_library="yes"
+    jd_pcre2_8_include_dir="$jd_with_pcre2_8inc_arg"
+   ;;
+ esac
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the pcre2-8 library and header files pcre2.h" >&5
+$as_echo_n "checking for the pcre2-8 library and header files pcre2.h... " >&6; }
+  if test X"$jd_with_pcre2_8_library" != Xno
+  then
+    jd_pcre2_8_inc_file=pcre2.h
+
+    if test "X$jd_pcre2_8_inc_file" = "X"
+    then
+       jd_pcre2_8_inc_file=pcre2-8.h
+    fi
+
+    if test X"$jd_pcre2_8_include_dir" = X
+    then
+      inc_and_lib_dirs="\
+         $jd_prefix_incdir,$jd_prefix_libdir \
+	 /usr/local/pcre2-8/include,/usr/local/pcre2-8/lib \
+	 /usr/local/include/pcre2-8,/usr/local/lib \
+	 /usr/local/include,/usr/local/lib \
+	 $JD_SYS_INCLIBS \
+	 /usr/include/pcre2-8,/usr/lib \
+	 /usr/pcre2-8/include,/usr/pcre2-8/lib \
+	 /usr/include,/usr/lib \
+	 /opt/include/pcre2-8,/opt/lib \
+	 /opt/pcre2-8/include,/opt/pcre2-8/lib \
+	 /opt/include,/opt/lib"
+
+      if test X != X
+      then
+        inc_and_lib_dirs="/include,/lib $inc_and_lib_dirs"
+      fi
+
+      case "$host_os" in
+         *darwin* )
+	   exts="dylib so a"
+	   ;;
+	 *cygwin* )
+	   exts="dll.a so a"
+	   ;;
+	 * )
+	   exts="so a"
+      esac
+
+      xincfile="$jd_pcre2_8_inc_file"
+      xlibfile="libpcre2-8"
+      jd_with_pcre2_8_library="no"
+
+      for include_and_lib in $inc_and_lib_dirs
+      do
+        # Yuk.  Is there a better way to set these variables??
+        xincdir=`echo $include_and_lib | tr ',' ' ' | awk '{print $1}'`
+	xlibdir=`echo $include_and_lib | tr ',' ' ' | awk '{print $2}'`
+	found=0
+	if test -r $xincdir/$xincfile
+	then
+	  for E in $exts
+	  do
+	    if test -r "$xlibdir/$xlibfile.$E"
+	    then
+	      jd_pcre2_8_include_dir="$xincdir"
+	      jd_pcre2_8_library_dir="$xlibdir"
+	      jd_with_pcre2_8_library="yes"
+	      found=1
+	      break
+	    fi
+	  done
+	fi
+	if test $found -eq 1
+	then
+	  break
+	fi
+      done
+    fi
+  fi
+
+  if test X"$jd_pcre2_8_include_dir" != X -a X"$jd_pcre2_8_library_dir" != X
+  then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes: $jd_pcre2_8_library_dir and $jd_pcre2_8_include_dir" >&5
+$as_echo "yes: $jd_pcre2_8_library_dir and $jd_pcre2_8_include_dir" >&6; }
+    jd_with_pcre2_8_library="yes"
+            PCRE2_8_LIB=-L$jd_pcre2_8_library_dir
+    PCRE2_8_LIB_DIR=$jd_pcre2_8_library_dir
+    if test "X$jd_pcre2_8_library_dir" = "X/usr/lib" -o "X$jd_pcre2_8_include_dir" = "X/usr/include"
+    then
+      PCRE2_8_LIB=""
+    else
+
+if test "X$jd_pcre2_8_library_dir" != "X"
+then
+  if test "X$RPATH" = "X"
+  then
+
+case "$host_os" in
+  *linux*|*solaris* )
+    if test "X$GCC" = Xyes
+    then
+      if test "X$ac_R_nospace" = "Xno"
+      then
+        RPATH="-Wl,-R,"
+      else
+        RPATH="-Wl,-R"
+      fi
+    else
+      if test "X$ac_R_nospace" = "Xno"
+      then
+        RPATH="-R "
+      else
+	RPATH="-R"
+      fi
+    fi
+  ;;
+  *osf*|*openbsd*|*freebsd*)
+    if test "X$GCC" = Xyes
+    then
+      RPATH="-Wl,-rpath,"
+    else
+      RPATH="-rpath "
+    fi
+  ;;
+  *netbsd*)
+    if test "X$GCC" = Xyes
+    then
+      RPATH="-Wl,-R"
+    fi
+  ;;
+esac
+
+    if test "X$RPATH" != "X"
+    then
+      RPATH="$RPATH$jd_pcre2_8_library_dir"
+    fi
+  else
+    _already_there=0
+    for X in `echo $RPATH | sed 's/:/ /g'`
+    do
+      if test "$X" = "$jd_pcre2_8_library_dir"
+      then
+        _already_there=1
+	break
+      fi
+    done
+    if test $_already_there = 0
+    then
+      RPATH="$RPATH:$jd_pcre2_8_library_dir"
+    fi
+  fi
+fi
+
+    fi
+
+    PCRE2_8_INC=-I$jd_pcre2_8_include_dir
+    PCRE2_8_INC_DIR=$jd_pcre2_8_include_dir
+    if test "X$jd_pcre2_8_include_dir" = "X/usr/include"
+    then
+      PCRE2_8_INC=""
+    fi
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+    jd_with_pcre2_8_library="no"
+    PCRE2_8_INC=""
+    PCRE2_8_LIB=""
+    PCRE2_8_INC_DIR=""
+    PCRE2_8_LIB_DIR=""
+  fi
+
+
+
+
+
+if test "$jd_with_pcre2_8_library" = yes
+then
+  PCRE2_MODULE="pcre2-module.so"
+
+$as_echo "#define HAVE_PCRE2_H 1" >>confdefs.h
+
+  extramodules="$extramodules pcre2"
+else
+  PCRE2_MODULE=""
+  missingmodules="$missingmodules pcre2"
+fi
+
+
 
 
 
@@ -7425,6 +7711,8 @@ fi
     jd_onig_include_dir="$jd_with_oniginc_arg"
    ;;
  esac
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the onig library and header files oniguruma.h" >&5
 $as_echo_n "checking for the onig library and header files oniguruma.h... " >&6; }
@@ -7612,6 +7900,8 @@ fi
 
 
 
+
+
  jd_png_include_dir=""
  jd_png_library_dir=""
  if test X"$jd_with_png_library" = X
@@ -7690,6 +7980,8 @@ fi
     jd_png_include_dir="$jd_with_pnginc_arg"
    ;;
  esac
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the png library and header files " >&5
 $as_echo_n "checking for the png library and header files ... " >&6; }
@@ -7877,6 +8169,8 @@ fi
 
 
 
+
+
  jd_z_include_dir=""
  jd_z_library_dir=""
  if test X"$jd_with_z_library" = X
@@ -7955,6 +8249,8 @@ fi
     jd_z_include_dir="$jd_with_zinc_arg"
    ;;
  esac
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the z library and header files zlib.h" >&5
 $as_echo_n "checking for the z library and header files zlib.h... " >&6; }
@@ -8149,6 +8445,8 @@ ICONV_MODULE=""
 
 
 
+
+
  jd_iconv_include_dir=""
  jd_iconv_library_dir=""
  if test X"$jd_with_iconv_library" = X
@@ -8227,6 +8525,8 @@ fi
     jd_iconv_include_dir="$jd_with_iconvinc_arg"
    ;;
  esac
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for the iconv library and header files " >&5
 $as_echo_n "checking for the iconv library and header files ... " >&6; }

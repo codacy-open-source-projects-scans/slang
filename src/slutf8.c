@@ -22,6 +22,7 @@ USA.
 #include <string.h>
 
 #include "slang.h"
+#define NEED_UINT_SUM_OVERFLOW
 #include "_slang.h"
 
 static unsigned char Len_Map[256] =
@@ -561,7 +562,14 @@ static SLuchar_Type *xform_utf8 (SLuchar_Type *u, SLuchar_Type *umax,
         if (malloced_len <= len + SLUTF8_MAX_MBLEN)
           {
              SLuchar_Type *newbuf;
-             malloced_len += 1 + (umax - u) + SLUTF8_MAX_MBLEN;
+	     size_t dmalloced_len = 1 + (umax - u) + SLUTF8_MAX_MBLEN;
+
+	     if (uint_sum_overflow (malloced_len, dmalloced_len, &malloced_len))
+	       {
+		  SLang_set_error (SL_MALLOC_ERROR);
+		  SLfree ((char *) buf);
+		  return NULL;
+	       }
 
              newbuf = (SLuchar_Type *)SLrealloc ((char *)buf, malloced_len);
              if (newbuf == NULL)

@@ -25,6 +25,8 @@ USA.
 #include <ctype.h>
 
 #include "slang.h"
+#define NEED_UINT_SUM_OVERFLOW 1
+#define NEED_UINT_MUL_OVERFLOW 1
 #include "_slang.h"
 
 #ifndef isdigit
@@ -341,9 +343,19 @@ static int compute_size_for_format (char *format, SLstrlen_Type *num_bytes)
    *num_bytes = size = 0;
 
    while (1 == (status = parse_a_format (&format, &ft)))
-     size += ft.repeat * ft.sizeof_type;
+     {
+	size_t dsize;
 
-   *num_bytes = size;
+	/* size += ft.repeat * ft.sizeof_type */
+	if (uint_mul_overflow (ft.repeat, ft.sizeof_type, &dsize)
+	    || uint_sum_overflow (size, dsize, &size))
+	  {
+	     _pSLang_verror (SL_ARITH_OVERFLOW_ERROR, "[un]pack format size is too large");
+	     return -1;
+	  }
+     }
+
+   *num_bytes = (SLstrlen_Type) size;
    return status;
 }
 
@@ -682,6 +694,13 @@ void _pSLunpack (char *format, SLang_BString_Type *bs)
 	  len = ft.repeat;
 	else
 	  len = get_unpadded_strlen ((char *)b, ft.pad, ft.repeat);
+
+	/* Reject len==UINT_MAX so that the SLmalloc(len+1) below cannot wrap to 0 */
+	if (len == (SLstrlen_Type)-1)
+	  {
+	     _pSLang_verror (SL_LimitExceeded_Error, "unpack string length is too large");
+	     return;
+	  }
 
 	str = (char *)SLmalloc (len + 1);
 	if (str == NULL)

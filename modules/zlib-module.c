@@ -34,6 +34,8 @@ SLANG_MODULE(zlib);
 static SLFUTURE_CONST char *Module_Version_String = "0.1.0";
 #define MODULE_VERSION_NUMBER  (0*10000 + 1*100 + 0)
 
+#define MAX_ALLOC_SIZE = ((SLstrlen_Type)-1)
+
 typedef struct
 {
    int type;
@@ -216,7 +218,14 @@ static int run_deflate (ZLib_Type *z, int flush,
 	  {
 	     unsigned char *new_buf;
 	     SLstrlen_Type dbuflen = z->dbuflen;
+
 	     buflen += dbuflen;
+	     if ((buflen < dbuflen) || ((buflen + (SLstrlen_Type)1) < buflen))
+	       {
+		  SLang_set_error (SL_Malloc_Error);
+		  goto return_error;
+	       }
+
 	     new_buf = (unsigned char *)SLrealloc ((char *) buf, buflen+1);
 	     if (new_buf == NULL)
 	       goto return_error;
@@ -399,7 +408,14 @@ static int run_inflate (ZLib_Type *z, int flush,
 	  {
 	     unsigned char *new_buf;
 	     SLstrlen_Type dbuflen = z->dbuflen;
+
 	     buflen += dbuflen;
+	     if ((buflen < dbuflen) || ((buflen + (SLstrlen_Type)1) < buflen))
+	       {
+		  SLang_set_error (SL_Malloc_Error);
+		  goto return_error;
+	       }
+
 	     new_buf = (unsigned char *)SLrealloc ((char *) buf, buflen+1);
 	     if (new_buf == NULL)
 	       goto return_error;

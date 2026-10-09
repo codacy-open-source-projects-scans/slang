@@ -2189,6 +2189,13 @@ int _pSLarray_aput1 (unsigned int num_indices)
 	break;
      }
 
+   if (num_indices > SLARRAY_MAX_DIMS)
+     {
+	_pSLang_verror (SL_INVALID_PARM, "Number of dims must be less than %d",
+			SLARRAY_MAX_DIMS+1);
+	return -1;
+     }
+
    if (-1 == SLang_pop_array (&at, 0))
      return -1;
 

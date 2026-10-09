@@ -23,7 +23,7 @@ USA.
 */
 
 #define SLANG_VERSION 20304
-#define SLANG_VERSION_STRING "pre2.3.4-20"
+#define SLANG_VERSION_STRING "pre2.3.4-29"
 /* #ifdef __DATE__ */
 /* # define SLANG_VERSION_STRING SLANG_VERSION_STRING0 " " __DATE__ */
 /* #else */
@@ -131,6 +131,9 @@ extern "C" {
 #endif
 #ifdef SIZEOF_INT
 # define SLANG_SIZEOF_INT SIZEOF_INT
+#endif
+#ifdef SIZEOF_LONG
+# define SLANG_SIZEOF_LONG SIZEOF_LONG
 #endif
 #ifdef SIZEOF_FLOAT
 # define SLANG_SIZEOF_FLOAT SIZEOF_FLOAT

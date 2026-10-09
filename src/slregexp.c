@@ -184,6 +184,7 @@ static SLCONST unsigned char *regexp_looking_at (Re_Context_Type *ctx,
 	   case NO_CASE: cs = 0; break;
 
 	   case OPAREN:
+	     if (ctx->open_paren_number >= 9) return NULL;   /* to many groups */
 	     ctx->open_paren_number++;
 	     ctx->reg->beg_matches[ctx->open_paren_number] = (str - ctx->str);
 	     break;
@@ -689,11 +690,11 @@ static int regexp_compile (SLRegexp_Type *reg)
 
 		case '(':
 		  oparen++;
-		  if (oparen > 9) ERROR;
+		  if (oparen + nparen >= 9) ERROR;
 		  *buf++ = OPAREN;
 		  break;
 		case ')':
-		  if (oparen == 0) ERROR;
+		  if ((oparen == 0) || (nparen >= 9)) ERROR;
 		  oparen--;
 		  nparen++;
 		  *buf++ = CPAREN;

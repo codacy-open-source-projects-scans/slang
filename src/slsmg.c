@@ -506,7 +506,7 @@ static int point_visible (int col_too)
 
 void SLsmg_write_chars (unsigned char *u, unsigned char *umax)
 {
-   SLsmg_Char_Type *p, *pmax;
+   SLsmg_Char_Type *p, *pmin, *pmax;
    SLsmg_Color_Type color;
    int flags;
    int col, start_col, max_col;
@@ -552,8 +552,9 @@ void SLsmg_write_chars (unsigned char *u, unsigned char *umax)
    col = This_Col;
    max_col = start_col + Screen_Cols;
 
-   p = SL_Screen[This_Row - Start_Row].neew;
-   pmax = p + Screen_Cols;
+   pmin = SL_Screen[This_Row - Start_Row].neew;
+   pmax = pmin + Screen_Cols;
+   p = pmin;
 
    if (col >= start_col)
      {
@@ -647,11 +648,11 @@ void SLsmg_write_chars (unsigned char *u, unsigned char *umax)
 		       if (i != 0)
 			 {
 			    NEXT_CHAR_CELL;
+			    if (col > start_col) p--;
 			    col--;
-			    p--;
 			 }
+		       if (col > start_col) p--;
 		       col--;
-		       p--;
 		    }
 		  u++;
 		  continue;
@@ -799,7 +800,7 @@ void SLsmg_write_chars (unsigned char *u, unsigned char *umax)
 	  NEXT_CHAR_CELL;
 	last_was_double_width = 0;
      }
-   else if ((col < max_col) && (p->nchars == 0))
+   else if ((col < max_col) && (p >= pmin) && (p->nchars == 0))
      {
 	/* The left side of a double with character was overwritten */
 	p->nchars = 1;

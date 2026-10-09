@@ -27,9 +27,9 @@ USA.
 #define CHKSUM_TYPE_PRIVATE_FIELDS \
    void *vlookup_table; \
    int refin, refout; \
-   unsigned int seed; \
-   unsigned int poly; \
-   unsigned int xorout;
+   long seed; \
+   long poly; \
+   long xorout;
 
 #include "chksum.h"
 
@@ -37,15 +37,15 @@ USA.
 #define SLang_push_uint32 SLang_push_uint
 
 static unsigned char Byte_Reflect[256];
-static unsigned int reflect_bits (unsigned int val, unsigned int nbits)
+static uint64_t reflect_bits (uint64_t val, unsigned int nbits)
 {
    unsigned int i;
-   unsigned int r = 0, s;
+   uint64_t r = 0, s;
 
-   s = (1 << (nbits-1));
+   s = (1ULL << (nbits-1));
    for (i = 0; i < nbits; i++)
      {
-        if (val & 0x00000001)
+        if (val & 1ULL)
 	  r |= s;
 	val = val >> 1;
 	s = s >> 1;
@@ -364,10 +364,10 @@ static int crc32_close (SLChksum_Type *cs, unsigned char *digest, int just_free)
 }
 
 static SLChksum_Type *
-chksum_crcxx_new (unsigned int defpoly, unsigned int mask)
+chksum_crcxx_new (unsigned long defpoly, unsigned long mask)
 {
    SLChksum_Type *cs;
-   unsigned int poly, seed, xorout;
+   unsigned long poly, seed, xorout;
    int refin, refout;
 
    make_byte_reflect_table ();
@@ -378,13 +378,13 @@ chksum_crcxx_new (unsigned int defpoly, unsigned int mask)
    if (-1 == SLang_get_int_qualifier ("refout", &refout, 0))
      return NULL;
 
-   if (-1 == SLang_get_int_qualifier ("xorout", (int *)&xorout, 0))
+   if (-1 == SLang_get_long_qualifier ("xorout", (long *)&xorout, 0))
      return NULL;
 
-   if (-1 == SLang_get_int_qualifier ("seed", (int *)&seed, 0))
+   if (-1 == SLang_get_long_qualifier ("seed", (long *)&seed, 0))
      return NULL;
 
-   if (-1 == SLang_get_int_qualifier ("poly", (int *)&poly, defpoly))
+   if (-1 == SLang_get_long_qualifier ("poly", (long *)&poly, defpoly))
      return NULL;
 
    cs = (SLChksum_Type *)SLmalloc (sizeof (SLChksum_Type));
@@ -465,3 +465,129 @@ SLChksum_Type *_pSLchksum_crc32_new (char *name)
    return cs;
 }
 
+#if (SLANG_SIZEOF_LONG >= 8)
+
+#define SLang_push_uint64 SLang_push_ulong_long
+
+typedef struct CRC64_Table_Type_
+{
+   struct CRC64_Table_Type_ *next;
+   uint64_t poly;
+   uint64_t lookup_table[256];
+}
+CRC64_Table_Type;
+static CRC64_Table_Type *CRC64_Table_List;
+
+static uint64_t *get_crc64_table (uint64_t poly)
+{
+   CRC64_Table_Type *list;
+   uint64_t *lookup_table;
+   unsigned int i;
+
+   list = CRC64_Table_List;
+   while (list != NULL)
+     {
+	if (list->poly == poly)
+	  return list->lookup_table;
+	list = list->next;
+     }
+   list = (CRC64_Table_Type *)SLmalloc(sizeof(CRC64_Table_Type));
+   if (list == NULL) return NULL;
+
+   list->poly = poly;
+   list->next = CRC64_Table_List;
+   CRC64_Table_List = list;
+
+   lookup_table = list->lookup_table;
+   for (i = 0; i < 256; i++)
+     {
+	unsigned int j;
+	uint64_t crc;
+
+	crc = (uint64_t)i << 56;
+	for (j = 0; j < 8; j++)
+	  {
+	     if (crc & 0x8000000000000000ULL)
+	       crc = (crc << 1)^poly;
+	     else
+	       crc = crc << 1;
+	  }
+	lookup_table[i] = crc;
+     }
+   return lookup_table;
+}
+
+static int crc64_accumulate (SLChksum_Type *cs, unsigned char *buf, unsigned int buflen)
+{
+   uint64_t *lookup_table;
+   uint64_t crc;
+   unsigned int i;
+
+   lookup_table = (uint64_t *)cs->vlookup_table;
+   crc = (uint64_t)cs->seed;
+
+   if (cs->refin)
+     {
+	for (i = 0; i < buflen; i++)
+	  {
+	     unsigned int j = Byte_Reflect[buf[i]] ^ (crc>>56);
+	     crc = lookup_table[j] ^ (crc<<8);
+	  }
+     }
+   else
+     {
+	for (i = 0; i < buflen; i++)
+	  {
+	     unsigned int j = buf[i] ^ (crc>>56);
+	     crc = lookup_table[j] ^ (crc<<8);
+	  }
+     }
+   cs->seed = crc;
+   return 0;
+}
+
+static int crc64_close (SLChksum_Type *cs, unsigned char *digest, int just_free)
+{
+   uint64_t crc;
+
+   (void) digest;
+   if (cs == NULL)
+     return -1;
+
+   if (just_free)
+     {
+	SLfree ((char *) cs);
+	return 0;
+     }
+
+   crc = cs->seed & 0xFFFFFFFFFFFFFFFFULL;
+   if (cs->refout)
+     crc = reflect_bits (crc, 64);
+   crc = (crc ^ cs->xorout) & 0xFFFFFFFFFFFFFFFFULL;
+
+   SLfree ((char *)cs);
+   return SLang_push_uint64 (crc);
+}
+
+SLChksum_Type *_pSLchksum_crc64_new (char *name)
+{
+   SLChksum_Type *cs;
+
+   (void) name;
+   /* NVME/Rocksoft default */
+   if (NULL == (cs = chksum_crcxx_new (0x9A6C9329AC4BC9B5ULL, 0xFFFFFFFFFFFFFFFFULL)))
+     return NULL;
+
+   cs->accumulate = crc64_accumulate;
+   cs->close = crc64_close;
+   cs->digest_len = 8;
+   cs->buffer_size = 0;
+
+   if (NULL == (cs->vlookup_table = get_crc64_table (cs->poly)))
+     {
+	SLfree ((char *)cs);
+	return NULL;
+     }
+   return cs;
+}
+#endif				       /* SLANG_SIZEOF_LONG >= 8 */

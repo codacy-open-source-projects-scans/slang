@@ -261,7 +261,7 @@ JD_SET_OBJ_SRC_DIR(src)
 missingmodules=""
 extramodules=""
 JD_CHECK_FOR_LIBRARY(pcre)
-if test $jd_with_pcre_library = yes
+if test "$jd_with_pcre_library" = yes
 then
   PCRE_MODULE="pcre-module.so"
   AC_DEFINE(HAVE_PCRE_H,1,[Set to 1 if you have the pcre.h header])
@@ -271,6 +271,18 @@ else
   missingmodules="$missingmodules pcre"
 fi
 AC_SUBST(PCRE_MODULE)
+
+JD_CHECK_FOR_LIBRARY(pcre2-8,pcre2.h)
+if test "$jd_with_pcre2_8_library" = yes
+then
+  PCRE2_MODULE="pcre2-module.so"
+  AC_DEFINE(HAVE_PCRE2_H,1,[Set to 1 if you have the pcre2.h header])
+  extramodules="$extramodules pcre2"
+else
+  PCRE2_MODULE=""
+  missingmodules="$missingmodules pcre2"
+fi
+AC_SUBST(PCRE2_MODULE)
 
 JD_CHECK_FOR_LIBRARY(onig,oniguruma.h)
 if test $jd_with_onig_library = yes

@@ -679,6 +679,14 @@ char *_pSLtt_tigetstr (SLterminfo_Type *t, SLCONST char *cap)
    offset = make_integer16 (t->string_offsets + 2 * offset);
    /* Note: If offset is -2, cap is cancelled; if -1, cap is absent (ncurses) */
    if (offset < 0) return NULL;
+
+   if ((unsigned int)offset >= t->string_table_size)
+     {
+        (void) fprintf (stderr, "Corrupt terminfo file: string offset %d for capability %s exceeds string \
+table size (%u)\n",
+                        offset, cap, t->string_table_size);
+        return NULL;
+     }
    return t->string_table + offset;
 }
 

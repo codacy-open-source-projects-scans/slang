@@ -61,6 +61,7 @@ struct _pSLang_List_Type
    Chunk_Type *recent;		       /* most recent chunk accessed */
    SLindex_Type recent_num;	       /* num elements before the recent chunk */
    int ref_count;
+   int in_destroy_callback;
 };
 
 static void delete_chunk (Chunk_Type *c)
@@ -339,6 +340,20 @@ static SLang_List_Type *make_sublist (SLang_List_Type *list, SLindex_Type indx_a
    return new_list;
 }
 
+static int protect_free_list_object (SLang_List_Type *list, SLang_Object_Type *obj)
+{
+   if (list->in_destroy_callback)
+     {
+	_pSLang_verror (SL_Forbidden_Error, "%s", "Double free of list detected");
+	return -1;
+     }
+   list->in_destroy_callback = 1;
+   SLang_free_object (obj);
+   list->in_destroy_callback = 0;
+
+   return 0;
+}
+
 static void list_delete_elem (SLang_List_Type *list, SLindex_Type *indxp)
 {
    SLang_Object_Type *elem;
@@ -352,7 +367,9 @@ static void list_delete_elem (SLang_List_Type *list, SLindex_Type *indxp)
 
    if (indx < 0) indx += list->length; /* checked by find_nth_element */
 
-   SLang_free_object (elem);
+   if (-1 == protect_free_list_object (list, elem))
+     return;
+
    c->num_elements--;
    list->length--;
 
@@ -464,8 +481,9 @@ static int insert_element (SLang_List_Type *list, SLang_Object_Type *obj, SLinde
    if (list->default_chunk_size < DEFAULT_CHUNK_SIZE)
      list->default_chunk_size *= 2;
 
-   if (NULL == (c1 = new_chunk (list->default_chunk_size)))
-     return -1;
+   /* if (NULL == (c1 = new_chunk (list->default_chunk_size))) return -1; */
+   /* Use this chunk's size instead of the list's default to prevent an overflow in the memcy below */
+   if (NULL == (c1 = new_chunk (c->chunk_size))) return -1;
 
    num = c->chunk_size - (elem - c->elements);
    if (num == c->chunk_size)
@@ -1105,7 +1123,9 @@ static int aput_object (SLang_List_Type *list, SLindex_Type indx, SLang_Object_T
    if (NULL == (elem = find_nth_element (list, indx, NULL)))
      return -1;
 
-   SLang_free_object (elem);
+   if (-1 == protect_free_list_object (list, elem))
+     return -1;
+
    *elem = *obj;
    return 0;
 }

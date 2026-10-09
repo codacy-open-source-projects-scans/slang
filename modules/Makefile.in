@@ -3,13 +3,14 @@ MODULES = slsmg-module.so termios-module.so select-module.so fcntl-module.so \
   varray-module.so socket-module.so rand-module.so fork-module.so \
   csv-module.so base64-module.so chksum-module.so histogram-module.so \
   stats-module.so json-module.so \
-  @PCRE_MODULE@ @PNG_MODULE@ @ICONV_MODULE@ @ONIG_MODULE@ @ZLIB_MODULE@ @SYSCONF_MODULE@
+  @PCRE_MODULE@ @PCRE2_MODULE@ @PNG_MODULE@ @ICONV_MODULE@ \
+  @ONIG_MODULE@ @ZLIB_MODULE@ @SYSCONF_MODULE@
 SLFILES = slsmg termios select fcntl varray socket rand fork csv  \
   base64 chksum histogram stats json \
-  pcre png iconv onig zlib sysconf
+  pcre png iconv onig zlib sysconf pcre2
 TEST_SCRIPTS = test_slsmg.sl test_termios.sl test_select.sl test_fcntl.sl \
   test_varray.sl test_socket.sl test_rand.sl test_fork.sl test_csv.sl \
-  test_base64.sl test_chksum.sl test_hist.sl test_stats.sl test_json.sl
+  test_base64.sl test_chksum.sl test_crc.sl test_hist.sl test_stats.sl test_json.sl
 #
 CHKSUM_OBJS = chksum-module.o chksum_md5.o chksum_sha1.o chksum_sha2.o chksum_crc.o
 STATS_OBJS = stats-module.o stats_kendall.o
@@ -43,6 +44,8 @@ SLANG_LIB	= @SLANG_LIB_FOR_MODULES@
 # ---------------------------------------------------------------------------
 PCRE_INC	= @PCRE_INC@
 PCRE_LIB	= @PCRE_LIB@ -lpcre
+PCRE2_INC	= @PCRE_INC@
+PCRE2_LIB	= @PCRE_LIB@ -lpcre2-8
 # ---------------------------------------------------------------------------
 # If building the PNG module, you may need to set these
 # ---------------------------------------------------------------------------
@@ -124,6 +127,8 @@ varray-module.so: $(SRCDIR)/varray-module.c $(CONFIG_H)
 	$(COMPILE_CMD) $(SRCDIR)/varray-module.c -o varray-module.so $(LIBS)
 pcre-module.so: $(SRCDIR)/pcre-module.c $(CONFIG_H)
 	$(COMPILE_CMD) $(PCRE_INC) $(SRCDIR)/pcre-module.c -o pcre-module.so $(PCRE_LIB) $(LIBS)
+pcre2-module.so: $(SRCDIR)/pcre2-module.c $(CONFIG_H)
+	$(COMPILE_CMD) $(PCRE2_INC) $(SRCDIR)/pcre2-module.c -o pcre2-module.so $(PCRE2_LIB) $(LIBS)
 onig-module.so: $(SRCDIR)/onig-module.c $(CONFIG_H)
 	$(COMPILE_CMD) $(ONIG_INC) $(SRCDIR)/onig-module.c -o onig-module.so $(ONIG_LIB) $(LIBS)
 png-module.so: $(SRCDIR)/png-module.c $(CONFIG_H)

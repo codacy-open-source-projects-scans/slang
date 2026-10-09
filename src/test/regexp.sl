@@ -180,6 +180,20 @@ test_globbing ("x[]", "^x\\[]$");
 test_globbing ("x[]]", "^x[]]$");
 test_globbing ("x\\[]]", "^x\\\\[]]$");
 
+private define test_bad (re)
+{
+   try
+     {
+	variable str = "foobar";
+	() = string_match (str, re);
+     }
+   catch AnyError: return;
+   failed ("Expected a parse error or regexp `%S`", re);
+}
+test_bad (`\(1\)\(2\)\(3\)\(4\)\(5\)\(6\)\(7\)\(8\)\(9\)\(A\)`);
+test_bad (`\(1\(2\(3\)\)\)\4`);
+test_bad (`\(1\(2\(3\(4\(5\(6\(7\(8\(9\(A\)\)\)\)\)\)\)\)\)\)`);
+
 print ("Ok\n");
 
 exit (0);

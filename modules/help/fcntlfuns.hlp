@@ -1,0 +1,124 @@
+fcntl_getfd
+
+ SYNOPSIS
+  Get a file descriptor's flags
+
+ USAGE
+  flags = fcntl_getfd (fd)
+
+ DESCRIPTION
+ This function returns the flags associated with the open file
+ descriptor `fd', which must be either an `FD_Type' object
+ or an integer.  If returns the value of the flags, or -1 and sets the
+ value of `errno' if an error occurs.
+
+ EXAMPLE
+
+   flags = fcntl_getfd (fileno(stdout));
+   if (flags == -1)
+     () = fprintf (stderr, "An error occurred: %s\n", errno_string());
+
+
+ NOTES
+ This function is a wrapper around the OS `fcntl(fd, F_GETFD,...)'
+ function.
+
+ SEE ALSO
+  fcntl_setfd, fcntl_getfl, fcntl_getpipe_sz, fileno, _fileno
+
+--------------------------------------------------------------
+
+fcntl_setfd
+
+ SYNOPSIS
+  Set a file descriptor's flags
+
+ USAGE
+  status = fcntl_setfd (flags, fd)
+
+ DESCRIPTION
+ This function may be used to set the flags on the open file
+ descriptior `fd'.  Here `flags' is an integer and `fd'
+ is either an integer or a `FD_Type' object.  It returns 0 if
+ successful, or -1 and sets the value of `error' upon failure.
+
+ EXAMPLE
+
+  flags = fcntl_getfd (fd);
+  status = fcntl_setfd (flags | FD_CLOEXEC, fd);
+  if (status != 0)
+     () = fprintf (stderr, "An error occurred: %s\n", errno_string());
+
+
+ NOTES
+ This function is a wrapper around the OS `fcntl(fd,F_SETFD,flags)'
+ function.
+
+ SEE ALSO
+  fcntl_getfd, fcntl_setfl, fcntl_setpipe_sz, fileno, _fileno
+
+--------------------------------------------------------------
+
+fcntl_getfl
+
+ SYNOPSIS
+
+ USAGE
+
+ DESCRIPTION
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------
+
+fcntl_setfl
+
+ SYNOPSIS
+
+ USAGE
+
+ DESCRIPTION
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------
+
+fcntl_getpipe_sz
+
+ SYNOPSIS
+
+ USAGE
+
+ DESCRIPTION
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------
+
+fcntl_setpipe_sz
+
+ SYNOPSIS
+
+ USAGE
+
+ DESCRIPTION
+
+ EXAMPLE
+
+ NOTES
+
+ SEE ALSO
+
+--------------------------------------------------------------

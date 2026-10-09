@@ -27,16 +27,20 @@ private define open_tmp_file (prefix, ext)
    variable fmt = path_concat (dir, "%s%X%d.%s");
    variable pid = getpid ();
    variable n = 0;
-   variable file, fp;
-
    loop (100)
      {
+	variable file, flags, fp, fd;
+
 	n++;
 	file = sprintf (fmt, prefix, pid*_time(), n, ext);
 
-	variable fd = open (file, O_WRONLY|O_CREAT|O_TRUNC|O_TEXT, S_IRUSR|S_IWUSR);
+	flags = O_WRONLY|O_CREAT|O_TRUNC|O_TEXT|O_EXCL;
+#ifexists O_NOFOLLOW
+	flags |= O_NOFOLLOW;
+#endif
+	fd = open (file, flags, S_IRUSR|S_IWUSR);
 	if (fd == NULL)
-	  return;
+	  continue;
 
 	fp = fdopen (fd, "w");
 	if (fp != NULL)
